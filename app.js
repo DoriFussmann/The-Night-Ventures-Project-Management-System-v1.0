@@ -25,6 +25,28 @@
 
   function select(id) { return document.getElementById(id); }
 
+  // --- API client ---
+  var API_BASE = window.API_BASE || 'http://localhost:5174';
+  function apiGetProjects() {
+    return fetch(API_BASE + '/api/projects').then(function(r){ return r.json(); });
+  }
+  function apiCreateProject(id, project) {
+    return fetch(API_BASE + '/api/projects', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id || undefined, project: project })
+    }).then(function(r){ return r.json(); });
+  }
+  function apiUpdateProject(id, project) {
+    return fetch(API_BASE + '/api/projects/' + encodeURIComponent(id), {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: project })
+    }).then(function(r){ return r.json(); });
+  }
+  function apiDeleteProject(id) {
+    return fetch(API_BASE + '/api/projects/' + encodeURIComponent(id), { method: 'DELETE' })
+      .then(function(r){ return r.json(); });
+  }
+
   function setupAdminTransparency() {
     var preflight = select('preflight');
     var runBtn = select('runBtn');
@@ -196,13 +218,6 @@
         open();
       });
     }
-
-    // Status contingent fields logic
-    if (statusEl) {
-      statusEl.addEventListener('change', function() {
-        updateStatusContingentFields();
-      });
-    }
     closeBtn && closeBtn.addEventListener('click', function() { close(); });
     cancelBtn && cancelBtn.addEventListener('click', function() { close(); });
     backdrop.addEventListener('click', function() { close(); });
@@ -248,20 +263,13 @@
         function persistWithImage(imageDataUrl) {
           var impactNumber = monthlyImpactEl ? parseCurrency(monthlyImpactEl.value) : null;
           var hoursNumber = hoursPerMonthEl && hoursPerMonthEl.value !== '' ? Number(hoursPerMonthEl.value) : null;
-          
-          // Get contingent field values
-          var timingEl = document.getElementById('projTiming');
-          var likelihoodEl = document.getElementById('projLikelihood');
-          var temperatureEl = document.getElementById('projTemperature');
-          var deathStageEl = document.getElementById('projDeathStage');
-          
           var payload = {
             name: nameEl.value || '',
             description: descEl.value || '',
             individuals: people,
             source: (sourceEl && sourceEl.value) || '',
             type: (typeEl && typeEl.value) || '',
-            status: (statusEl && statusEl.value) || 'Warming Up',
+            status: (statusEl && statusEl.value) || 'Live',
             monthlyImpact: impactNumber,
             hoursPerMonth: hoursNumber,
             tasks: {
@@ -269,12 +277,7 @@
               doing: extractTasks(doingEl),
               done: extractTasks(doneEl)
             },
-            imageDataUrl: imageDataUrl || null,
-            // Contingent status fields
-            timing: (timingEl && timingEl.value) || null,
-            likelihood: (likelihoodEl && likelihoodEl.value) || null,
-            temperature: (temperatureEl && temperatureEl.value) || null,
-            deathStage: (deathStageEl && deathStageEl.value) || null
+            imageDataUrl: imageDataUrl || null
           };
           setTimeout(function() {
             if (modal.__editingId) {
@@ -357,48 +360,11 @@
             return;
           }
         }
-        // Fallback: ensure project modal is hidden and open via internal button
+        // Fallback
         modal.setAttribute('aria-hidden','true');
         var openTaskBtn = select('openTaskModalBtn');
         if (openTaskBtn) openTaskBtn.click();
       });
-    }
-
-    function updateStatusContingentFields() {
-      var status = statusEl ? statusEl.value : '';
-      var contingentContainer = document.getElementById('statusContingentFields');
-      var pipelineFields = document.getElementById('pipelineFields');
-      var warmingUpFields = document.getElementById('warmingUpFields');
-      var slowDeathFields = document.getElementById('slowDeathFields');
-      
-      if (!contingentContainer) return;
-      
-      // Hide all contingent fields first
-      contingentContainer.style.display = 'none';
-      if (pipelineFields) pipelineFields.style.display = 'none';
-      if (warmingUpFields) warmingUpFields.style.display = 'none';
-      if (slowDeathFields) slowDeathFields.style.display = 'none';
-      
-      // Show appropriate fields based on status
-      switch (status) {
-        case 'Pipeline':
-          contingentContainer.style.display = 'block';
-          if (pipelineFields) pipelineFields.style.display = 'block';
-          break;
-        case 'Warming Up':
-          contingentContainer.style.display = 'block';
-          if (warmingUpFields) warmingUpFields.style.display = 'block';
-          break;
-        case 'Slow Death':
-          contingentContainer.style.display = 'block';
-          if (slowDeathFields) slowDeathFields.style.display = 'block';
-          break;
-        case 'Live':
-        case 'Archived/Dead':
-        default:
-          // No additional fields needed
-          break;
-      }
     }
 
     function clearForm() {
@@ -407,7 +373,7 @@
       peopleEl.value = '';
       if (sourceEl) sourceEl.value = 'EarlyStageLabs';
       if (typeEl) typeEl.value = 'Fractional CFO';
-      if (statusEl) statusEl.value = 'Warming Up';
+      if (statusEl) statusEl.value = 'Live';
       if (monthlyImpactEl) monthlyImpactEl.value = '';
       if (hoursPerMonthEl) hoursPerMonthEl.value = '';
       if (previewEl) previewEl.removeAttribute('src');
@@ -415,18 +381,6 @@
       doingEl.value = '';
       doneEl.value = '';
       if (imageEl) imageEl.value = '';
-      
-      // Clear contingent fields
-      var timingEl = document.getElementById('projTiming');
-      var likelihoodEl = document.getElementById('projLikelihood');
-      var temperatureEl = document.getElementById('projTemperature');
-      var deathStageEl = document.getElementById('projDeathStage');
-      if (timingEl) timingEl.value = '';
-      if (likelihoodEl) likelihoodEl.value = '';
-      if (temperatureEl) temperatureEl.value = '';
-      if (deathStageEl) deathStageEl.value = '';
-      
-      updateStatusContingentFields();
     }
 
     // API: populate form for editing
@@ -437,7 +391,7 @@
       peopleEl.value = (project.individuals || []).join(', ');
       if (sourceEl) sourceEl.value = project.source || 'EarlyStageLabs';
       if (typeEl) typeEl.value = project.type || 'Fractional CFO';
-      if (statusEl) statusEl.value = project.status || 'Warming Up';
+      if (statusEl) statusEl.value = project.status || 'Live';
       if (monthlyImpactEl) monthlyImpactEl.value = project.monthlyImpact != null ? formatCurrency(project.monthlyImpact) : '';
       if (hoursPerMonthEl) hoursPerMonthEl.value = project.hoursPerMonth != null ? String(project.hoursPerMonth) : '';
       todoEl.value = (project.tasks && project.tasks.todo || []).join('\n');
@@ -446,23 +400,11 @@
       if (previewEl) {
         if (project.imageDataUrl) previewEl.src = project.imageDataUrl; else previewEl.removeAttribute('src');
       }
-      
-      // Populate contingent fields
-      var timingEl = document.getElementById('projTiming');
-      var likelihoodEl = document.getElementById('projLikelihood');
-      var temperatureEl = document.getElementById('projTemperature');
-      var deathStageEl = document.getElementById('projDeathStage');
-      if (timingEl) timingEl.value = project.timing || '';
-      if (likelihoodEl) likelihoodEl.value = project.likelihood || '';
-      if (temperatureEl) temperatureEl.value = project.temperature || '';
-      if (deathStageEl) deathStageEl.value = project.deathStage || '';
-      
-      updateStatusContingentFields();
       open();
     };
   }
 
-  // Storage helpers
+  // Storage helpers (with server sync)
   var PROJECTS_KEY = 'tnv_projects_v1';
   function readProjects() {
     try {
@@ -481,15 +423,25 @@
     var id = generateId();
     map[id] = project;
     writeProjects(map);
+    // Sync to server
+    apiCreateProject(id, project).catch(function(){});
     return id;
   }
   function updateProject(id, project) {
     var map = readProjects();
     if (map[id]) { map[id] = project; writeProjects(map); }
+    apiUpdateProject(id, project).catch(function(){});
   }
   function deleteProject(id) {
     var map = readProjects();
     if (map[id]) { delete map[id]; writeProjects(map); }
+    apiDeleteProject(id).catch(function(){});
+  }
+
+  function mergeServerIntoLocal(serverMap) {
+    var local = readProjects();
+    var merged = Object.assign({}, local, serverMap || {});
+    writeProjects(merged);
   }
 
   function renderProjects() {
@@ -540,7 +492,6 @@
         (list || []).forEach(function(task) {
           var tr = document.createElement('tr');
           var deadline = '';
-          // If structured task exists, try to find by title match to get deadline; otherwise leave blank
           var st = p.structuredTasks || {};
           var stageLists = [st.todo || [], st.doing || [], st.done || []];
           for (var i = 0; i < stageLists.length; i++) {
@@ -630,7 +581,7 @@
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+      .replace(/\"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
 
@@ -676,7 +627,6 @@
       taskModal.setAttribute('aria-hidden', 'true');
       releaseFocus(taskModal);
       document.removeEventListener('keydown', onEscape);
-      // If a project modal exists, reveal it again
       if (projectModal && projectModal.setAttribute) {
         projectModal.setAttribute('aria-hidden', 'false');
       }
@@ -684,7 +634,6 @@
 
     function onEscape(e) { if (e.key === 'Escape') closeTaskModal(); }
 
-    // Expose an opener for the global Admin button that shows the project picker
     taskModal.openFromGlobal = function() {
       if (projectModal && projectModal.setAttribute) {
         projectModal.setAttribute('aria-hidden','true');
@@ -697,7 +646,6 @@
 
     if (openTaskBtn) {
       openTaskBtn.addEventListener('click', function() {
-        // Within-project flow: hide project modal to avoid overlap and hide picker
         if (projectModal && projectModal.setAttribute) {
           projectModal.setAttribute('aria-hidden','true');
         }
@@ -716,7 +664,6 @@
       saveTaskBtn.addEventListener('click', function() {
         var targetProjectId = (taskModal && typeof taskModal.__getSelectedProjectId === 'function') ? taskModal.__getSelectedProjectId() : (projectModal && projectModal.__editingId);
         if (!targetProjectId) {
-          // No project selected; create one from form
           targetProjectId = ensureProjectExistsFromForm();
           if (projectModal) projectModal.__editingId = targetProjectId;
         }
@@ -736,6 +683,7 @@
         (proj.tasks[stage] = proj.tasks[stage] || []).push(display);
         map[targetProjectId] = proj;
         writeProjects(map);
+        apiUpdateProject(targetProjectId, proj).catch(function(){});
         renderProjects();
         renderAdminTasks();
         renderHomeGrid();
@@ -753,7 +701,7 @@
         individuals: people,
         source: (select('projSource') && select('projSource').value) || '',
         type: (select('projType') && select('projType').value) || '',
-        status: (select('projStatus') && select('projStatus').value) || 'Warming Up',
+        status: (select('projStatus') && select('projStatus').value) || 'Live',
         monthlyImpact: parseCurrency(select('projMonthlyImpact') && select('projMonthlyImpact').value),
         hoursPerMonth: (select('projHoursPerMonth') && select('projHoursPerMonth').value) ? Number(select('projHoursPerMonth').value) : null,
         tasks: { todo: [], doing: [], done: [] },
@@ -766,25 +714,33 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize default preflight if textarea exists
     var preflightEl = document.getElementById('preflight');
     if (preflightEl && !preflightEl.value.trim()) {
       preflightEl.value = defaultPreflightJson();
     }
 
-    // Prepare progress-cycle buttons (opt-in)
     document.querySelectorAll('.btn-progress').forEach(function(btn) {
       attachProgressCycle(btn);
     });
 
-
     setupAdminTransparency();
-    setupAddProjectModal();
-    renderProjects();
-    renderAdminTasks();
-    renderHomeGrid();
-    renderHomeTasks();
-    renderProbabilityMap();
+
+    // Initial sync from server to local, then render
+    apiGetProjects().then(function(serverMap){
+      mergeServerIntoLocal(serverMap);
+      setupAddProjectModal();
+      renderProjects();
+      renderAdminTasks();
+      renderHomeGrid();
+      renderHomeTasks();
+    }).catch(function(){
+      // Fallback to local only
+      setupAddProjectModal();
+      renderProjects();
+      renderAdminTasks();
+      renderHomeGrid();
+      renderHomeTasks();
+    });
   });
 })();
 

@@ -4,13 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"vite\" \"node server.js\"",
     "build": "vite build",
-    "preview": "vite preview --port 5173",
-    "setup": "node content-manager.js setup",
-    "content:export": "node content-manager.js export",
-    "content:import": "node content-manager.js import",
-    "content:status": "node content-manager.js status",
+    "preview": "concurrently \"vite preview --port 5173\" \"node server.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -19,5 +15,10 @@
   "type": "commonjs",
   "devDependencies": {
     "vite": "^7.1.5"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
   }
 }
