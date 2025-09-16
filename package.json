@@ -7,6 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 5173",
+    "setup": "node content-manager.js setup",
+    "content:export": "node content-manager.js export",
+    "content:import": "node content-manager.js import",
+    "content:status": "node content-manager.js status",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
