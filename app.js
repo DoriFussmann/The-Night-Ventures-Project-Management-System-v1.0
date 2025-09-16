@@ -784,6 +784,7 @@
     renderAdminTasks();
     renderHomeGrid();
     renderHomeTasks();
+    renderProbabilityMap();
   });
 })();
 

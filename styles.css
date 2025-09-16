@@ -173,6 +173,17 @@ a:hover { text-decoration: underline; }
   .tasks-grid { 
     grid-template-columns: 1fr; 
   }
+  .probability-map-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .pipeline-grid {
+    grid-template-columns: 60px 1fr;
+  }
+  .y-label {
+    font-size: 10px;
+    padding: 4px 2px;
+  }
 }
 
 .image-preview { width: 100%; max-height: 200px; object-fit: cover; border: 1px solid #e5e5e5; border-radius: 6px; }
@@ -204,4 +215,185 @@ a:hover { text-decoration: underline; }
 .tasks-title { font-size: 14px; line-height: 20px; margin-bottom: 8px; }
 .task-button { width: 100%; text-align: left; display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 6px; background: #ffffff; transition: background-color 120ms ease, border-color 120ms ease; }
 .task-button:hover { background: #f2f2f2; }
+
+/* Probability Map */
+.probability-map-container {
+  display: grid;
+  grid-template-columns: 15% 70% 15%;
+  gap: 24px;
+  min-height: 600px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+/* Warming Up Section */
+.warming-up-section {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fefefe;
+}
+
+.warming-up-group {
+  margin-bottom: 20px;
+}
+
+.temp-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.temp-title.hot { background: #fee2e2; color: #dc2626; }
+.temp-title.warmer { background: #fef3c7; color: #d97706; }
+.temp-title.warm { background: #dbeafe; color: #2563eb; }
+
+/* Pipeline Grid Section */
+.pipeline-section {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fefefe;
+}
+
+.pipeline-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 8px;
+  height: 100%;
+}
+
+.y-axis-labels {
+  display: grid;
+  grid-template-rows: auto repeat(3, 1fr);
+  gap: 8px;
+}
+
+.y-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  border-radius: 4px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.y-label.happening { background: #dcfce7; color: #16a34a; }
+.y-label.likely { background: #fef3c7; color: #d97706; }
+.y-label.who-knows { background: #f3f4f6; color: #6b7280; }
+
+.grid-content {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+}
+
+.x-axis-labels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.x-label {
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  color: #475569;
+}
+
+.grid-cells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.grid-cell {
+  border: 2px dashed #d1d5db;
+  border-radius: 6px;
+  padding: 8px;
+  min-height: 80px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.grid-cell:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+/* Slow Death Section */
+.slow-death-section {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fefefe;
+}
+
+.slow-death-group {
+  margin-bottom: 20px;
+}
+
+.death-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.death-title.dying { background: #fef3c7; color: #d97706; }
+.death-title.dead { background: #fee2e2; color: #dc2626; }
+.death-title.archived { background: #f3f4f6; color: #6b7280; }
+
+/* Project Lists */
+.project-list {
+  min-height: 60px;
+  border: 1px dashed #d1d5db;
+  border-radius: 4px;
+  padding: 8px;
+  background: #ffffff;
+}
+
+.project-item {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.project-item:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.project-item:last-child {
+  margin-bottom: 0;
+}
 
