@@ -196,6 +196,13 @@
         open();
       });
     }
+
+    // Status contingent fields logic
+    if (statusEl) {
+      statusEl.addEventListener('change', function() {
+        updateStatusContingentFields();
+      });
+    }
     closeBtn && closeBtn.addEventListener('click', function() { close(); });
     cancelBtn && cancelBtn.addEventListener('click', function() { close(); });
     backdrop.addEventListener('click', function() { close(); });
@@ -241,13 +248,20 @@
         function persistWithImage(imageDataUrl) {
           var impactNumber = monthlyImpactEl ? parseCurrency(monthlyImpactEl.value) : null;
           var hoursNumber = hoursPerMonthEl && hoursPerMonthEl.value !== '' ? Number(hoursPerMonthEl.value) : null;
+          
+          // Get contingent field values
+          var timingEl = document.getElementById('projTiming');
+          var likelihoodEl = document.getElementById('projLikelihood');
+          var temperatureEl = document.getElementById('projTemperature');
+          var deathStageEl = document.getElementById('projDeathStage');
+          
           var payload = {
             name: nameEl.value || '',
             description: descEl.value || '',
             individuals: people,
             source: (sourceEl && sourceEl.value) || '',
             type: (typeEl && typeEl.value) || '',
-            status: (statusEl && statusEl.value) || 'Live',
+            status: (statusEl && statusEl.value) || 'Warming Up',
             monthlyImpact: impactNumber,
             hoursPerMonth: hoursNumber,
             tasks: {
@@ -255,7 +269,12 @@
               doing: extractTasks(doingEl),
               done: extractTasks(doneEl)
             },
-            imageDataUrl: imageDataUrl || null
+            imageDataUrl: imageDataUrl || null,
+            // Contingent status fields
+            timing: (timingEl && timingEl.value) || null,
+            likelihood: (likelihoodEl && likelihoodEl.value) || null,
+            temperature: (temperatureEl && temperatureEl.value) || null,
+            deathStage: (deathStageEl && deathStageEl.value) || null
           };
           setTimeout(function() {
             if (modal.__editingId) {
@@ -345,13 +364,50 @@
       });
     }
 
+    function updateStatusContingentFields() {
+      var status = statusEl ? statusEl.value : '';
+      var contingentContainer = document.getElementById('statusContingentFields');
+      var pipelineFields = document.getElementById('pipelineFields');
+      var warmingUpFields = document.getElementById('warmingUpFields');
+      var slowDeathFields = document.getElementById('slowDeathFields');
+      
+      if (!contingentContainer) return;
+      
+      // Hide all contingent fields first
+      contingentContainer.style.display = 'none';
+      if (pipelineFields) pipelineFields.style.display = 'none';
+      if (warmingUpFields) warmingUpFields.style.display = 'none';
+      if (slowDeathFields) slowDeathFields.style.display = 'none';
+      
+      // Show appropriate fields based on status
+      switch (status) {
+        case 'Pipeline':
+          contingentContainer.style.display = 'block';
+          if (pipelineFields) pipelineFields.style.display = 'block';
+          break;
+        case 'Warming Up':
+          contingentContainer.style.display = 'block';
+          if (warmingUpFields) warmingUpFields.style.display = 'block';
+          break;
+        case 'Slow Death':
+          contingentContainer.style.display = 'block';
+          if (slowDeathFields) slowDeathFields.style.display = 'block';
+          break;
+        case 'Live':
+        case 'Archived/Dead':
+        default:
+          // No additional fields needed
+          break;
+      }
+    }
+
     function clearForm() {
       nameEl.value = '';
       descEl.value = '';
       peopleEl.value = '';
       if (sourceEl) sourceEl.value = 'EarlyStageLabs';
       if (typeEl) typeEl.value = 'Fractional CFO';
-      if (statusEl) statusEl.value = 'Live';
+      if (statusEl) statusEl.value = 'Warming Up';
       if (monthlyImpactEl) monthlyImpactEl.value = '';
       if (hoursPerMonthEl) hoursPerMonthEl.value = '';
       if (previewEl) previewEl.removeAttribute('src');
@@ -359,6 +415,18 @@
       doingEl.value = '';
       doneEl.value = '';
       if (imageEl) imageEl.value = '';
+      
+      // Clear contingent fields
+      var timingEl = document.getElementById('projTiming');
+      var likelihoodEl = document.getElementById('projLikelihood');
+      var temperatureEl = document.getElementById('projTemperature');
+      var deathStageEl = document.getElementById('projDeathStage');
+      if (timingEl) timingEl.value = '';
+      if (likelihoodEl) likelihoodEl.value = '';
+      if (temperatureEl) temperatureEl.value = '';
+      if (deathStageEl) deathStageEl.value = '';
+      
+      updateStatusContingentFields();
     }
 
     // API: populate form for editing
@@ -369,7 +437,7 @@
       peopleEl.value = (project.individuals || []).join(', ');
       if (sourceEl) sourceEl.value = project.source || 'EarlyStageLabs';
       if (typeEl) typeEl.value = project.type || 'Fractional CFO';
-      if (statusEl) statusEl.value = project.status || 'Live';
+      if (statusEl) statusEl.value = project.status || 'Warming Up';
       if (monthlyImpactEl) monthlyImpactEl.value = project.monthlyImpact != null ? formatCurrency(project.monthlyImpact) : '';
       if (hoursPerMonthEl) hoursPerMonthEl.value = project.hoursPerMonth != null ? String(project.hoursPerMonth) : '';
       todoEl.value = (project.tasks && project.tasks.todo || []).join('\n');
@@ -378,6 +446,18 @@
       if (previewEl) {
         if (project.imageDataUrl) previewEl.src = project.imageDataUrl; else previewEl.removeAttribute('src');
       }
+      
+      // Populate contingent fields
+      var timingEl = document.getElementById('projTiming');
+      var likelihoodEl = document.getElementById('projLikelihood');
+      var temperatureEl = document.getElementById('projTemperature');
+      var deathStageEl = document.getElementById('projDeathStage');
+      if (timingEl) timingEl.value = project.timing || '';
+      if (likelihoodEl) likelihoodEl.value = project.likelihood || '';
+      if (temperatureEl) temperatureEl.value = project.temperature || '';
+      if (deathStageEl) deathStageEl.value = project.deathStage || '';
+      
+      updateStatusContingentFields();
       open();
     };
   }
@@ -673,7 +753,7 @@
         individuals: people,
         source: (select('projSource') && select('projSource').value) || '',
         type: (select('projType') && select('projType').value) || '',
-        status: (select('projStatus') && select('projStatus').value) || 'Live',
+        status: (select('projStatus') && select('projStatus').value) || 'Warming Up',
         monthlyImpact: parseCurrency(select('projMonthlyImpact') && select('projMonthlyImpact').value),
         hoursPerMonth: (select('projHoursPerMonth') && select('projHoursPerMonth').value) ? Number(select('projHoursPerMonth').value) : null,
         tasks: { todo: [], doing: [], done: [] },
