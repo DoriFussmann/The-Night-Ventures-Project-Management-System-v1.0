@@ -176,7 +176,16 @@
 
   function renderProjects() { var tbody = document.getElementById('projectsTbody'); if (!tbody) return; var map = readProjects(); var ids = Object.keys(map); tbody.innerHTML = ''; ids.forEach(function(id) { var p = map[id]; var tr = document.createElement('tr'); tr.className = 'table-row'; var impact = p.monthlyImpact != null ? formatCurrency(p.monthlyImpact) : ''; tr.innerHTML = '<td>' + escapeHtml(p.name || '') + '</td>' + '<td>' + escapeHtml(p.type || '') + '</td>' + '<td>' + escapeHtml(p.status || '') + '</td>' + '<td>' + escapeHtml(impact) + '</td>'; tbody.appendChild(tr); }); tbody.querySelectorAll('tr.table-row').forEach(function(row, index) { row.addEventListener('click', function() { var id = ids[index]; var map = readProjects(); var modal = document.getElementById('addProjectModal'); if (modal && map[id] && typeof modal.populateForEdit === 'function') { modal.populateForEdit(id, map[id]); } }); }); }
 
-  function renderAdminTasks() { var tTodo = document.getElementById('adminTasksTodo'); var tDoing = document.getElementById('adminTasksDoing'); var tDone = document.getElementById('adminTasksDone'); if (!tTodo || !tDoing || !tDone) return; tTodo.innerHTML = ''; tDoing.innerHTML = ''; tDone.innerHTML = ''; var map = readProjects(); Object.keys(map).forEach(function(id) { var p = map[id]; function pushRows(list, tbody) { (list || []).forEach(function(task) { var tr = document.createElement('tr'); var deadline = ''; var st = p.structuredTasks || {}; var stageLists = [st.todo || [], st.doing || [], st.done || []]; for (var i = 0; i < stageLists.length; i++) { var arr = stageLists[i]; for (var j = 0; j < arr.length; j++) { var e = arr[j]; var display = e.title || e.short || ''; if (display === task) { deadline = e.deadline || ''; break; } } } tr.innerHTML = '<td>' + escapeHtml(p.name || '') + '</td>' + '<td>' + escapeHtml(task) + '</td>' + '<td>' + escapeHtml(deadline) + '</td>'; tbody.appendChild(tr); }); } var tasks = p.tasks || {}; pushRows(tasks.todo, tTodo); pushRows(tasks.doing, tDoing); pushRows(tasks.done, tDone); }); }
+  function renderAdminTasks() { var tTodo = document.getElementById('adminTasksTodo'); var tDoing = document.getElementById('adminTasksDoing'); var tDone = document.getElementById('adminTasksDone'); if (!tTodo || !tDoing || !tDone) return; tTodo.innerHTML = ''; tDoing.innerHTML = ''; tDone.innerHTML = ''; var map = readProjects(); var rowMeta = []; Object.keys(map).forEach(function(id) { var p = map[id]; function pushRows(list, tbody, stage) { (list || []).forEach(function(task) { var tr = document.createElement('tr'); tr.className = 'table-row'; var deadline = ''; var st = p.structuredTasks || {}; var stageLists = [st.todo || [], st.doing || [], st.done || []]; for (var i = 0; i < stageLists.length; i++) { var arr = stageLists[i]; for (var j = 0; j < arr.length; j++) { var e = arr[j]; var display = e.title || e.short || ''; if (display === task) { deadline = e.deadline || ''; break; } } } tr.innerHTML = '<td>' + escapeHtml(p.name || '') + '</td>' + '<td>' + escapeHtml(task) + '</td>' + '<td>' + escapeHtml(deadline) + '</td>'; tbody.appendChild(tr); rowMeta.push({ tbodyId: tbody.id, projectId: id, task: task, stage: stage }); }); } var tasks = p.tasks || {}; pushRows(tasks.todo, tTodo, 'todo'); pushRows(tasks.doing, tDoing, 'doing'); pushRows(tasks.done, tDone, 'done'); }); function wire(tableBody, tbodyId) { var rows = tableBody.querySelectorAll('tr.table-row'); var i = 0; rows.forEach(function(row){ row.addEventListener('click', function(){ while (i < rowMeta.length && rowMeta[i].tbodyId !== tbodyId) { i++; } var meta = rowMeta[i++]; if (!meta) return; var taskModal = document.getElementById('taskModal'); if (!taskModal) return; // Pre-fill task modal
+      var pickerRow = select('taskProjectPickerRow'); if (pickerRow) pickerRow.style.display = 'block';
+      var picker = select('taskProjectPicker'); if (picker) { picker.innerHTML = ''; var map = readProjects(); Object.keys(map).forEach(function(pid){ var opt = document.createElement('option'); opt.value = pid; opt.textContent = map[pid].name || pid; picker.appendChild(opt); }); picker.value = meta.projectId; }
+      taskModal.__getSelectedProjectId = function(){ return (picker && picker.value) || meta.projectId; };
+      var taskTitle = document.getElementById('taskTitle'); if (taskTitle) taskTitle.value = meta.task;
+      var taskStage = document.getElementById('taskStage'); if (taskStage) taskStage.value = meta.stage;
+      var st = (readProjects()[meta.projectId] || {}).structuredTasks || {}; var detail = null; ['todo','doing','done'].forEach(function(s){ (st[s]||[]).forEach(function(e){ var d = e.title || e.short || ''; if (d === meta.task) detail = e; }); }); var taskShort = document.getElementById('taskShort'); var taskLong = document.getElementById('taskLong'); var taskDeadline = document.getElementById('taskDeadline'); if (taskShort) taskShort.value = (detail && detail.short) || ''; if (taskLong) taskLong.value = (detail && detail.long) || ''; if (taskDeadline) taskDeadline.value = (detail && detail.deadline) || '';
+      if (typeof taskModal.openFromGlobal === 'function') { taskModal.openFromGlobal(); }
+    }); }); }
+    wire(tTodo, 'adminTasksTodo'); wire(tDoing, 'adminTasksDoing'); wire(tDone, 'adminTasksDone'); }
 
   function renderHomeGrid() { var grid = document.getElementById('projectsGrid'); if (!grid) return; var map = readProjects(); var ids = Object.keys(map); grid.innerHTML = ''; ids.forEach(function(id) { var p = map[id]; var card = document.createElement('div'); card.className = 'project-card'; var hasLogo = p.imageDataUrl && typeof p.imageDataUrl === 'string' && p.imageDataUrl.length > 0; card.innerHTML = ((hasLogo ? '<img class="project-logo" src="' + p.imageDataUrl + '" alt="' + escapeHtml((p.name||'') + ' logo') + '">' : '<div class="project-logo" aria-hidden="true"></div>') + '<div class="project-name">' + escapeHtml(p.name || '') + '</div>' + '<div class="project-desc">' + escapeHtml(p.type || '') + '</div>'); card.addEventListener('click', function() { var modal = document.getElementById('addProjectModal'); if (modal && typeof modal.populateForEdit === 'function') { modal.populateForEdit(id, p); } }); grid.appendChild(card); }); }
 
@@ -205,6 +214,147 @@
   function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;'); }
   function defaultPreflightJson() { return JSON.stringify({ action: 'example', params: { id: 123, verbose: false } }, null, 2); }
 
+  // Users storage
+  var USERS_KEY = 'tnv_users_v1';
+  function readUsers() { try { var raw = localStorage.getItem(USERS_KEY); return raw ? JSON.parse(raw) : []; } catch (_) { return []; } }
+  function writeUsers(list) { localStorage.setItem(USERS_KEY, JSON.stringify(list)); }
+
+  function setupUserModal() {
+    var addUserBtn = document.getElementById('addUserBtn');
+    var modal = document.getElementById('userModal');
+    var closeBtn = document.getElementById('closeUserModalBtn');
+    var cancelBtn = document.getElementById('cancelUserBtn');
+    var saveBtn = document.getElementById('saveUserBtn');
+    var deleteBtn = document.getElementById('deleteUserBtn');
+    var projectSel = document.getElementById('userProject');
+    var firstNameEl = document.getElementById('userFirstName');
+    var lastNameEl = document.getElementById('userLastName');
+    var emailEl = document.getElementById('userEmail');
+    var passEl = document.getElementById('userPassword');
+    var permsTbody = document.getElementById('userPermsTbody');
+    if (!modal || !projectSel) return;
+
+    function populateProjects() {
+      var map = readProjects(); var ids = Object.keys(map);
+      projectSel.innerHTML = '';
+      ids.forEach(function(id){ var opt = document.createElement('option'); opt.value = id; opt.textContent = map[id].name || id; projectSel.appendChild(opt); });
+    }
+    var ALL_PAGES = [
+      { id: 'home', label: 'Home' },
+      { id: 'admin', label: 'Admin' },
+      { id: 'bva', label: 'BvA' },
+      { id: 'probability', label: 'Probability Map' }
+    ];
+    function renderPermissions(perms) {
+      if (!permsTbody) return;
+      permsTbody.innerHTML = '';
+      ALL_PAGES.forEach(function(pg){
+        var tr = document.createElement('tr');
+        var checked = true;
+        if (perms && typeof perms === 'object' && pg.id in perms) checked = !!perms[pg.id];
+        tr.innerHTML = '<td>' + escapeHtml(pg.label) + '</td>' +
+                       '<td><input type="checkbox" data-perm-id="' + pg.id + '" ' + (checked ? 'checked' : '') + ' /></td>';
+        permsTbody.appendChild(tr);
+      });
+    }
+    function open() {
+      populateProjects();
+      renderPermissions();
+      modal.setAttribute('aria-hidden','false');
+      var focusables = modal.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
+      var first = focusables[0]; var last = focusables[focusables.length - 1];
+      trapFocus(modal, first, last);
+      setTimeout(function(){ projectSel.focus(); }, 0);
+      document.addEventListener('keydown', onEscape);
+    }
+    function close() {
+      modal.setAttribute('aria-hidden','true');
+      releaseFocus(modal);
+      document.removeEventListener('keydown', onEscape);
+      if (addUserBtn) { try { addUserBtn.focus(); } catch(_){} }
+    }
+    function onEscape(e) { if (e.key === 'Escape') close(); }
+    function clearForm() {
+      firstNameEl && (firstNameEl.value = '');
+      lastNameEl && (lastNameEl.value = '');
+      emailEl && (emailEl.value = '');
+      passEl && (passEl.value = '');
+      renderPermissions();
+    }
+
+    if (addUserBtn) { addUserBtn.addEventListener('click', function(){ clearForm(); open(); }); }
+    if (closeBtn) closeBtn.addEventListener('click', function(){ close(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ close(); });
+    modal.addEventListener('click', function(e){ if (e.target === modal) close(); });
+
+    if (saveBtn) {
+      attachProgressCycle(saveBtn);
+      saveBtn.addEventListener('click', function(){
+        var users = readUsers();
+        if (modal.__editingId) {
+          var idx = users.findIndex(function(u){ return u.id === modal.__editingId; });
+          if (idx !== -1) {
+            users[idx] = Object.assign({}, users[idx], {
+              projectId: projectSel.value || null,
+              email: (emailEl && emailEl.value) || '',
+              password: (passEl && passEl.value) || '',
+              firstName: (firstNameEl && firstNameEl.value) || '',
+              lastName: (lastNameEl && lastNameEl.value) || '',
+              permissions: collectPermissions()
+            });
+          }
+        } else {
+          var record = {
+            id: 'u_' + Math.random().toString(36).slice(2,10),
+            projectId: projectSel.value || null,
+            email: (emailEl && emailEl.value) || '',
+            password: (passEl && passEl.value) || '',
+            firstName: (firstNameEl && firstNameEl.value) || '',
+            lastName: (lastNameEl && lastNameEl.value) || '',
+            permissions: collectPermissions()
+          };
+          users.push(record);
+        }
+        writeUsers(users);
+        renderAdminUsers();
+        setTimeout(function(){ clearForm(); close(); modal.__editingId = null; }, 1000);
+      });
+    }
+
+    if (deleteBtn) {
+      attachProgressCycle(deleteBtn);
+      deleteBtn.addEventListener('click', function(){
+        if (!modal.__editingId) return;
+        var users = readUsers();
+        var idx = users.findIndex(function(u){ return u.id === modal.__editingId; });
+        if (idx !== -1) users.splice(idx, 1);
+        writeUsers(users);
+        renderAdminUsers();
+        setTimeout(function(){ clearForm(); close(); modal.__editingId = null; }, 700);
+      });
+    }
+
+    modal.populateForEdit = function(user){
+      populateProjects();
+      modal.__editingId = user.id;
+      projectSel.value = user.projectId || '';
+      if (firstNameEl) firstNameEl.value = user.firstName || '';
+      if (lastNameEl) lastNameEl.value = user.lastName || '';
+      if (emailEl) emailEl.value = user.email || '';
+      if (passEl) passEl.value = user.password || '';
+      renderPermissions(user.permissions || {});
+      open();
+    };
+
+    function collectPermissions() {
+      var result = {};
+      if (!permsTbody) return result;
+      var inputs = permsTbody.querySelectorAll('input[type="checkbox"][data-perm-id]');
+      inputs.forEach(function(cb){ result[cb.getAttribute('data-perm-id')] = cb.checked; });
+      return result;
+    }
+  }
+
   function setupTaskModal(openTaskBtn, projectModal) { var taskModal = document.getElementById('taskModal'); var taskTitle = document.getElementById('taskTitle'); var taskStage = document.getElementById('taskStage'); var taskShort = document.getElementById('taskShort'); var taskLong = document.getElementById('taskLong'); var taskDeadline = document.getElementById('taskDeadline'); var closeTaskModalBtn = document.getElementById('closeTaskModalBtn'); var cancelTaskBtn = document.getElementById('cancelTaskBtn'); var saveTaskBtn = document.getElementById('saveTaskBtn'); if (!taskModal) return; function clearTaskForm() { if (taskTitle) taskTitle.value = ''; if (taskStage) taskStage.value = 'todo'; if (taskShort) taskShort.value = ''; if (taskLong) taskLong.value = ''; if (taskDeadline) taskDeadline.value = ''; } function openTaskModal() { taskModal.setAttribute('aria-hidden', 'false'); var focusables = taskModal.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'); var first = focusables[0]; var last = focusables[focusables.length - 1]; trapFocus(taskModal, first, last); setTimeout(function() { if (taskTitle) taskTitle.focus(); }, 0); document.addEventListener('keydown', onEscape); } function closeTaskModal() { taskModal.setAttribute('aria-hidden', 'true'); releaseFocus(taskModal); document.removeEventListener('keydown', onEscape); if (projectModal && projectModal.setAttribute) { projectModal.setAttribute('aria-hidden', 'false'); } } function onEscape(e) { if (e.key === 'Escape') closeTaskModal(); } taskModal.openFromGlobal = function() { if (projectModal && projectModal.setAttribute) { projectModal.setAttribute('aria-hidden','true'); } var pickerRow = select('taskProjectPickerRow'); if (pickerRow) pickerRow.style.display = 'block'; clearTaskForm(); openTaskModal(); }; if (openTaskBtn) { openTaskBtn.addEventListener('click', function() { if (projectModal && projectModal.setAttribute) { projectModal.setAttribute('aria-hidden','true'); } var pickerRow = select('taskProjectPickerRow'); if (pickerRow) pickerRow.style.display = 'none'; if (taskModal) taskModal.__getSelectedProjectId = null; clearTaskForm(); openTaskModal(); }); } closeTaskModalBtn && closeTaskModalBtn.addEventListener('click', function() { closeTaskModal(); }); cancelTaskBtn && cancelTaskBtn.addEventListener('click', function() { closeTaskModal(); }); if (saveTaskBtn) { attachProgressCycle(saveTaskBtn); saveTaskBtn.addEventListener('click', function() { var targetProjectId = (taskModal && typeof taskModal.__getSelectedProjectId === 'function') ? taskModal.__getSelectedProjectId() : (projectModal && projectModal.__editingId); if (!targetProjectId) { targetProjectId = ensureProjectExistsFromForm(); if (projectModal) projectModal.__editingId = targetProjectId; } var map = readProjects(); var proj = map[targetProjectId] || {}; if (!proj.tasks) proj.tasks = { todo: [], doing: [], done: [] }; var entry = { title: taskTitle.value || '', short: taskShort.value || '', long: taskLong.value || '', deadline: taskDeadline.value || '' }; var stage = (taskStage && taskStage.value) || 'todo'; var display = entry.title || entry.short || '[Untitled Task]'; if (!proj.structuredTasks) proj.structuredTasks = { todo: [], doing: [], done: [] }; proj.structuredTasks[stage].push(entry); (proj.tasks[stage] = proj.tasks[stage] || []).push(display); map[targetProjectId] = proj; writeProjects(map); apiUpdateProject(targetProjectId, proj).catch(function(){}); renderProjects(); renderAdminTasks(); renderHomeGrid(); renderHomeTasks(); closeTaskModal(); if (taskModal) taskModal.__getSelectedProjectId = null; }); } function ensureProjectExistsFromForm() { var people = (select('projPeople').value || '').split(',').map(function(s){return s.trim();}).filter(Boolean); var payload = { name: select('projName').value || '', description: select('projDesc').value || '', individuals: people, source: (select('projSource') && select('projSource').value) || '', type: (select('projType') && select('projType').value) || '', status: (select('projStatus') && select('projStatus').value) || 'Live', monthlyImpact: parseCurrency(select('projMonthlyImpact') && select('projMonthlyImpact').value), hoursPerMonth: (select('projHoursPerMonth') && select('projHoursPerMonth').value) ? Number(select('projHoursPerMonth').value) : null, tasks: { todo: [], doing: [], done: [] }, structuredTasks: { todo: [], doing: [], done: [] }, imageDataUrl: (select('projImagePreview') && select('projImagePreview').src) || null }; var id = createProject(payload); return id; }
   }
 
@@ -218,17 +368,23 @@
     apiGetProjects().then(function(serverMap){
       mergeServerIntoLocal(serverMap);
       setupAddProjectModal();
+      setupUserModal();
       renderProjects();
       renderAdminTasks();
+      renderAdminUsers();
       renderHomeGrid();
       renderHomeTasks();
+      wireAuthBox();
       wireHomeAddProject();
     }).catch(function(){
       setupAddProjectModal();
+      setupUserModal();
       renderProjects();
       renderAdminTasks();
+      renderAdminUsers();
       renderHomeGrid();
       renderHomeTasks();
+      wireAuthBox();
       wireHomeAddProject();
     });
   });
@@ -258,6 +414,55 @@
       // Focus first field
       var nameEl = document.getElementById('projName'); if (nameEl) setTimeout(function(){ nameEl.focus(); }, 0);
     });
+  }
+
+  function renderAdminUsers() {
+    var tbody = document.getElementById('adminUsersTbody'); if (!tbody) return;
+    var users = readUsers(); var map = readProjects();
+    tbody.innerHTML = '';
+    users.forEach(function(u, idx){
+      var tr = document.createElement('tr'); tr.className = 'table-row';
+      var projName = (u.projectId && map[u.projectId] && map[u.projectId].name) ? map[u.projectId].name : '';
+      tr.innerHTML = '<td>' + escapeHtml(projName) + '</td>' +
+                     '<td>' + escapeHtml(u.firstName || '') + '</td>' +
+                     '<td>' + escapeHtml(u.lastName || '') + '</td>' +
+                     '<td>' + escapeHtml(u.email || '') + '</td>';
+      tbody.appendChild(tr);
+    });
+    Array.prototype.forEach.call(tbody.querySelectorAll('tr.table-row'), function(row, i){
+      row.addEventListener('click', function(){
+        var users = readUsers(); var user = users[i]; if (!user) return;
+        var modal = document.getElementById('userModal'); if (modal && typeof modal.populateForEdit === 'function') { modal.populateForEdit(user); }
+      });
+    });
+  }
+
+  // Simple auth box toggle logic (client-side only)
+  function wireAuthBox() {
+    var loginTab = document.getElementById('authTabLogin');
+    var signupTab = document.getElementById('authTabSignup');
+    var loginForm = document.getElementById('authLoginForm');
+    var signupForm = document.getElementById('authSignupForm');
+    var signupProject = document.getElementById('authSignupProject');
+    if (!loginTab || !signupTab || !loginForm || !signupForm) return;
+    function setMode(mode) {
+      var isLogin = mode === 'login';
+      loginForm.style.display = isLogin ? '' : 'none';
+      signupForm.style.display = isLogin ? 'none' : '';
+      loginTab.setAttribute('aria-pressed', isLogin ? 'true' : 'false');
+      signupTab.setAttribute('aria-pressed', isLogin ? 'false' : 'true');
+    }
+    function populateSignupProjects() {
+      if (!signupProject) return;
+      var map = readProjects(); var ids = Object.keys(map);
+      signupProject.innerHTML = '';
+      ids.forEach(function(id){ var opt = document.createElement('option'); opt.value = id; opt.textContent = map[id].name || id; signupProject.appendChild(opt); });
+    }
+    loginTab.addEventListener('click', function(){ setMode('login'); });
+    signupTab.addEventListener('click', function(){ populateSignupProjects(); setMode('signup'); });
+    // Prevent default submits for now
+    loginForm.addEventListener('submit', function(e){ e.preventDefault(); });
+    signupForm.addEventListener('submit', function(e){ e.preventDefault(); });
   }
 })();
 

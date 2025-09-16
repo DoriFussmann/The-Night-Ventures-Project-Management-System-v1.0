@@ -21,6 +21,7 @@ export default function Bva() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<{ headers: string[]; rows: Row[] } | null>(null)
+  const [selectedPeriod, setSelectedPeriod] = useState('')
 
   const url = import.meta.env.VITE_SHEET_CSV_URL as string | undefined
 
@@ -46,6 +47,82 @@ export default function Bva() {
     }
     run()
   }, [url])
+
+  const periodKey = useMemo(() => data?.headers.find(h => h.toLowerCase() === 'period') ?? null, [data])
+  const periodOptions = useMemo(() => {
+    if (!data || !periodKey) return [] as string[]
+    const set = new Set<string>()
+    data.rows.forEach(r => {
+      const v = r[periodKey] ?? ''
+      if (v !== '') set.add(v)
+    })
+    return Array.from(set)
+  }, [data, periodKey])
+
+  const visibleRows = useMemo(() => {
+    if (!data) return [] as Row[]
+    if (!selectedPeriod || !periodKey) return data.rows
+    return data.rows.filter(r => (r[periodKey] ?? '') === selectedPeriod)
+  }, [data, selectedPeriod, periodKey])
+
+  const metricKeyKey = useMemo(() => data?.headers.find(h => h.toLowerCase() === 'metric_key') ?? null, [data])
+  const metricValueKey = useMemo(() => data?.headers.find(h => h.toLowerCase() === 'metric_value') ?? null, [data])
+
+  function parseNumberLike(raw: string | undefined): number | null {
+    if (!raw) return null
+    const cleaned = raw.toString().trim().replace(/[$,%\s]/g, '').replace(/,/g, '')
+    if (cleaned === '') return null
+    const n = Number(cleaned)
+    return Number.isFinite(n) ? n : null
+  }
+
+  const incomeValue = useMemo(() => {
+    if (!data || !metricKeyKey || !metricValueKey) return null
+    const inScope = selectedPeriod && periodKey
+      ? data.rows.filter(r => (r[periodKey] ?? '') === selectedPeriod)
+      : data.rows
+    const match = inScope.find(r => (r[metricKeyKey] ?? '').toLowerCase() === 'income')
+    if (!match) return null
+    const n = parseNumberLike(match[metricValueKey])
+    return n
+  }, [data, selectedPeriod, periodKey, metricKeyKey, metricValueKey])
+
+  const grossProfitValue = useMemo(() => {
+    if (!data || !metricKeyKey || !metricValueKey) return null
+    const inScope = selectedPeriod && periodKey
+      ? data.rows.filter(r => (r[periodKey] ?? '') === selectedPeriod)
+      : data.rows
+    const match = inScope.find(r => (r[metricKeyKey] ?? '').toLowerCase() === 'gross profit')
+    if (!match) return null
+    return parseNumberLike(match[metricValueKey])
+  }, [data, selectedPeriod, periodKey, metricKeyKey, metricValueKey])
+
+  const ebitdaValue = useMemo(() => {
+    if (!data || !metricKeyKey || !metricValueKey) return null
+    const inScope = selectedPeriod && periodKey
+      ? data.rows.filter(r => (r[periodKey] ?? '') === selectedPeriod)
+      : data.rows
+    const match = inScope.find(r => (r[metricKeyKey] ?? '').toLowerCase() === 'ebitda')
+    if (!match) return null
+    return parseNumberLike(match[metricValueKey])
+  }, [data, selectedPeriod, periodKey, metricKeyKey, metricValueKey])
+
+  const changeInCashValue = useMemo(() => {
+    if (!data || !metricKeyKey || !metricValueKey) return null
+    const inScope = selectedPeriod && periodKey
+      ? data.rows.filter(r => (r[periodKey] ?? '') === selectedPeriod)
+      : data.rows
+    const match = inScope.find(r => (r[metricKeyKey] ?? '').toLowerCase() === 'change in cash')
+    if (!match) return null
+    return parseNumberLike(match[metricValueKey])
+  }, [data, selectedPeriod, periodKey, metricKeyKey, metricValueKey])
+
+  function formatCurrency(n: number | null): string {
+    if (n === null || n === undefined) return '—'
+    const formatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+    const sign = n < 0 ? '-' : ''
+    return `${sign}$${formatter.format(Math.abs(n))}`
+  }
 
   return (
     <>
@@ -81,8 +158,23 @@ export default function Bva() {
           <div style={{ color: '#b91c1c' }}>{error}</div>
         ) : data ? (
           <div>
-            <div style={{ margin: '12px 0' }}>
-              <strong>Rows loaded:</strong> {data.rows.length}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '12px 0' }}>
+              <div><strong>Rows:</strong> {visibleRows.length}</div>
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label className="label" htmlFor="periodSelect">Period</label>
+                <select
+                  id="periodSelect"
+                  className="input"
+                  style={{ width: 220 }}
+                  value={selectedPeriod}
+                  onChange={e => setSelectedPeriod(e.target.value)}
+                >
+                  <option value="">All periods</option>
+                  {periodOptions.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: 8 }}>
               <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -96,7 +188,7 @@ export default function Bva() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.rows.map((r, idx) => (
+                  {visibleRows.map((r, idx) => (
                     <tr key={idx}>
                       {data.headers.map(h => (
                         <td key={h} style={{ padding: '10px 12px', borderBottom: '1px solid #f1f5f9', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas', fontSize: 13 }}>
@@ -110,17 +202,22 @@ export default function Bva() {
             </div>
             <section style={{ marginTop: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
-                {[
-                  { label: 'Income', value: '$1,245,000' },
-                  { label: 'Gross Profit', value: '$720,300' },
-                  { label: 'EBITDA', value: '$312,450' },
-                  { label: 'Change in Cash', value: '$98,120' },
-                ].map(card => (
-                  <div key={card.label} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
-                    <div style={{ fontSize: 12, color: '#525252', marginBottom: 6 }}>{card.label}</div>
-                    <div style={{ fontSize: 22 }}>{card.value}</div>
-                  </div>
-                ))}
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                  <div style={{ fontSize: 12, color: '#525252', marginBottom: 6 }}>Income</div>
+                  <div style={{ fontSize: 22 }}>{formatCurrency(incomeValue)}</div>
+                </div>
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                  <div style={{ fontSize: 12, color: '#525252', marginBottom: 6 }}>Gross Profit</div>
+                  <div style={{ fontSize: 22 }}>{formatCurrency(grossProfitValue)}</div>
+                </div>
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                  <div style={{ fontSize: 12, color: '#525252', marginBottom: 6 }}>EBITDA</div>
+                  <div style={{ fontSize: 22 }}>{formatCurrency(ebitdaValue)}</div>
+                </div>
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                  <div style={{ fontSize: 12, color: '#525252', marginBottom: 6 }}>Change in Cash</div>
+                  <div style={{ fontSize: 22 }}>{formatCurrency(changeInCashValue)}</div>
+                </div>
               </div>
             </section>
             <section style={{ marginTop: 24 }}>

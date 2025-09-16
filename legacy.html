@@ -13,6 +13,53 @@
 <body>
   <!-- Header is now managed by React; keep space minimal in legacy to avoid duplicates -->
   <main class="layout stack" style="padding-top: 48px; padding-bottom: 32px;">
+    <!-- Auth Box -->
+    <section class="section">
+      <div class="auth-card stack" id="authBox">
+        <div class="row auth-tabs">
+          <button id="authTabLogin" class="btn btn-sm" type="button" aria-pressed="true">Log In</button>
+          <button id="authTabSignup" class="btn btn-sm" type="button" aria-pressed="false">Sign Up</button>
+        </div>
+        <form id="authLoginForm" class="stack" action="#">
+          <div class="stack">
+            <label class="label" for="authLoginUsername">Username</label>
+            <input id="authLoginUsername" class="input" type="text" placeholder="Username" />
+          </div>
+          <div class="stack">
+            <label class="label" for="authLoginPassword">Password</label>
+            <input id="authLoginPassword" class="input" type="password" placeholder="Your password" />
+          </div>
+          <div>
+            <button id="authLoginSubmit" class="btn btn-sm" type="submit">Log In</button>
+          </div>
+        </form>
+        <form id="authSignupForm" class="stack" action="#" style="display:none;">
+          <div class="grid-2">
+            <div class="stack">
+              <label class="label" for="authSignupFirst">First Name</label>
+              <input id="authSignupFirst" class="input" type="text" placeholder="First name" />
+            </div>
+            <div class="stack">
+              <label class="label" for="authSignupLast">Last Name</label>
+              <input id="authSignupLast" class="input" type="text" placeholder="Last name" />
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="stack">
+              <label class="label" for="authSignupProject">Project</label>
+              <select id="authSignupProject" class="input" aria-label="Project"></select>
+            </div>
+            <div class="stack">
+              <label class="label" for="authSignupPassword">Password</label>
+              <input id="authSignupPassword" class="input" type="password" placeholder="Create a password" />
+            </div>
+          </div>
+          <div>
+            <button id="authSignupSubmit" class="btn btn-sm" type="submit">Sign Up</button>
+          </div>
+        </form>
+      </div>
+    </section>
     <section class="section stack">
       <div class="row">
         <h2 style="margin-right: auto;">Projects</h2>
