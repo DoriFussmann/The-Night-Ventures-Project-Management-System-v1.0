@@ -777,6 +777,7 @@
       attachProgressCycle(btn);
     });
 
+
     setupAdminTransparency();
     setupAddProjectModal();
     renderProjects();
