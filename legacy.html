@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>The Night Ventures - Admin</title>
+  <title>The Night Ventures - Home</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,84 +11,46 @@
   <meta name="color-scheme" content="light only">
 </head>
 <body>
-  <header class="layout stack" style="padding-top: 16px; padding-bottom: 16px;">
-    <h1>The Night Ventures</h1>
-  </header>
-  <main class="layout stack" style="padding-bottom: 32px;">
+  <!-- Header is now managed by React; keep space minimal in legacy to avoid duplicates -->
+  <main class="layout stack" style="padding-top: 48px; padding-bottom: 32px;">
     <section class="section stack">
-      <h2>Admin</h2>
       <div class="row">
-        <a class="btn" href="index.html">Back</a>
-        <button id="addProjectBtn" class="btn btn-progress" type="button">
+        <h2 style="margin-right: auto;">Projects</h2>
+        <button id="homeAddProjectBtn" class="btn btn-sm btn-progress" type="button">
           <span class="state-idle">Add Project</span>
           <span class="state-working"><span class="spinner" aria-hidden="true"></span> working…</span>
           <span class="state-done">✓ done</span>
         </button>
-        <button id="addTaskGlobalBtn" class="btn" type="button">Add Task</button>
+      </div>
+      <div id="projectsGrid" class="projects-grid"></div>
+    </section>
+    <section class="section stack" style="margin-top: 48px;">
+      <div class="row">
+        <h2 style="margin-right: auto;">Tasks</h2>
+        <button id="addTaskGlobalBtn" class="btn btn-sm" type="button">Add Task</button>
+      </div>
+      <div class="tasks-grid">
+        <div class="tasks-col">
+          <div class="tasks-title">Do</div>
+          <div id="tasksColTodo" class="stack"></div>
+        </div>
+        <div class="tasks-col">
+          <div class="tasks-title">Doing</div>
+          <div id="tasksColDoing" class="stack"></div>
+        </div>
+        <div class="tasks-col">
+          <div class="tasks-title">Done</div>
+          <div id="tasksColDone" class="stack"></div>
+        </div>
       </div>
     </section>
-    <section class="section stack">
-      <h2>Projects</h2>
-      <table class="table" aria-label="Projects list">
-        <thead>
-          <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Type</th>
-            <th scope="col">Status</th>
-            <th scope="col">Monthly $ Impact</th>
-          </tr>
-        </thead>
-        <tbody id="projectsTbody"></tbody>
-      </table>
-    </section>
-
-    <section class="section stack">
-      <h2>Tasks — Do</h2>
-      <table class="table" aria-label="Tasks Do">
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">Task</th>
-            <th scope="col">Deadline</th>
-          </tr>
-        </thead>
-        <tbody id="adminTasksTodo"></tbody>
-      </table>
-    </section>
-    <section class="section stack">
-      <h2>Tasks — Doing</h2>
-      <table class="table" aria-label="Tasks Doing">
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">Task</th>
-            <th scope="col">Deadline</th>
-          </tr>
-        </thead>
-        <tbody id="adminTasksDoing"></tbody>
-      </table>
-    </section>
-    <section class="section stack">
-      <h2>Tasks — Done</h2>
-      <table class="table" aria-label="Tasks Done">
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">Task</th>
-            <th scope="col">Deadline</th>
-          </tr>
-        </thead>
-        <tbody id="adminTasksDone"></tbody>
-      </table>
-    </section>
-
     
-    <!-- Modal: Add Project -->
+    <!-- Modal: Add/Edit Project (shared with Admin behavior) -->
     <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true"></div>
     <div id="addProjectModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="addProjectTitle">
       <div class="modal-panel stack" role="document">
         <div class="modal-header">
-          <h2 id="addProjectTitle" class="modal-title">Add Project</h2>
+          <h2 id="addProjectTitle" class="modal-title">Project</h2>
           <button id="closeModalBtn" class="btn" type="button" aria-label="Close">Close</button>
         </div>
         <div class="modal-body stack">
@@ -131,6 +93,49 @@
                 <option value="Archived/Dead">Archived/Dead</option>
               </select>
             </div>
+            <!-- Contingent Status Fields -->
+            <div id="statusContingentFields" class="stack" style="display: none;">
+              <!-- Pipeline Fields -->
+              <div id="pipelineFields" class="grid-2" style="display: none;">
+                <div class="stack">
+                  <label class="label" for="projTiming">Timing</label>
+                  <select id="projTiming" class="input" aria-label="Timing">
+                    <option value="">Select timing...</option>
+                    <option value="90 Days">90 Days</option>
+                    <option value="60 Days">60 Days</option>
+                    <option value="30 Days">30 Days</option>
+                  </select>
+                </div>
+                <div class="stack">
+                  <label class="label" for="projLikelihood">Likelihood</label>
+                  <select id="projLikelihood" class="input" aria-label="Likelihood">
+                    <option value="">Select likelihood...</option>
+                    <option value="Who Knows">Who Knows</option>
+                    <option value="Likely">Likely</option>
+                    <option value="Happening">Happening</option>
+                  </select>
+                </div>
+              </div>
+              <!-- Warming Up Fields -->
+              <div id="warmingUpFields" class="stack" style="display: none;">
+                <label class="label" for="projTemperature">Temperature</label>
+                <select id="projTemperature" class="input" aria-label="Temperature">
+                  <option value="">Select temperature...</option>
+                  <option value="Warm">Warm</option>
+                  <option value="Warmer">Warmer</option>
+                  <option value="Hot">Hot</option>
+                </select>
+              </div>
+              <!-- Slow Death Fields -->
+              <div id="slowDeathFields" class="stack" style="display: none;">
+                <label class="label" for="projDeathStage">Stage</label>
+                <select id="projDeathStage" class="input" aria-label="Death Stage">
+                  <option value="">Select stage...</option>
+                  <option value="Dying">Dying</option>
+                  <option value="Dead">Dead</option>
+                </select>
+              </div>
+            </div>
             <div class="stack">
               <label class="label" for="projMonthlyImpact">Monthly $ Impact</label>
               <input id="projMonthlyImpact" class="input" type="text" placeholder="$0.00" inputmode="decimal" />
@@ -138,49 +143,6 @@
             <div class="stack">
               <label class="label" for="projHoursPerMonth"># of Hours / Month</label>
               <input id="projHoursPerMonth" class="input" type="number" placeholder="0" min="0" step="1" />
-            </div>
-          </div>
-          <!-- Contingent Status Fields -->
-          <div id="statusContingentFields" class="stack" style="display: none;">
-            <!-- Pipeline Fields -->
-            <div id="pipelineFields" class="grid-2" style="display: none;">
-              <div class="stack">
-                <label class="label" for="projTiming">Timing</label>
-                <select id="projTiming" class="input" aria-label="Timing">
-                  <option value="">Select timing...</option>
-                  <option value="90 Days">90 Days</option>
-                  <option value="60 Days">60 Days</option>
-                  <option value="30 Days">30 Days</option>
-                </select>
-              </div>
-              <div class="stack">
-                <label class="label" for="projLikelihood">Likelihood</label>
-                <select id="projLikelihood" class="input" aria-label="Likelihood">
-                  <option value="">Select likelihood...</option>
-                  <option value="Who Knows">Who Knows</option>
-                  <option value="Likely">Likely</option>
-                  <option value="Happening">Happening</option>
-                </select>
-              </div>
-            </div>
-            <!-- Warming Up Fields -->
-            <div id="warmingUpFields" class="stack" style="display: none;">
-              <label class="label" for="projTemperature">Temperature</label>
-              <select id="projTemperature" class="input" aria-label="Temperature">
-                <option value="">Select temperature...</option>
-                <option value="Warm">Warm</option>
-                <option value="Warmer">Warmer</option>
-                <option value="Hot">Hot</option>
-              </select>
-            </div>
-            <!-- Slow Death Fields -->
-            <div id="slowDeathFields" class="stack" style="display: none;">
-              <label class="label" for="projDeathStage">Stage</label>
-              <select id="projDeathStage" class="input" aria-label="Death Stage">
-                <option value="">Select stage...</option>
-                <option value="Dying">Dying</option>
-                <option value="Dead">Dead</option>
-              </select>
             </div>
           </div>
           <div class="grid-2">
@@ -193,6 +155,7 @@
               <img id="projImagePreview" class="image-preview" alt="Image preview" />
             </div>
           </div>
+          
         </div>
         <div class="modal-footer">
           <button id="cancelAddProject" class="btn" type="button">Cancel</button>
@@ -201,7 +164,6 @@
             <span class="state-working"><span class="spinner" aria-hidden="true"></span> working…</span>
             <span class="state-done">✓ done</span>
           </button>
-          <button id="openTaskModalBtn" class="btn" type="button">Add Task</button>
           <button id="saveAddProject" class="btn btn-progress" type="button">
             <span class="state-idle">Save</span>
             <span class="state-working"><span class="spinner" aria-hidden="true"></span> working…</span>
@@ -211,7 +173,7 @@
       </div>
     </div>
     
-    <!-- Modal: Add Task -->
+    <!-- Modal: Add Task (shared) -->
     <div id="taskModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="taskModalTitle">
       <div class="modal-panel stack" role="document">
         <div class="modal-header">
@@ -262,7 +224,7 @@
     </div>
   </main>
   <script src="app.js"></script>
-  
 </body>
 </html>
+
 

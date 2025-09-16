@@ -4,11 +4,16 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 5174;
+const PORT = process.env.PORT || 5175;
 const DATA_PATH = path.join(__dirname, 'data.json');
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
+
+// Root can show simple status
+app.get('/', (_req, res) => {
+  res.type('text/plain').send('API server is running');
+});
 
 function ensureDataFile() {
   if (!fs.existsSync(DATA_PATH)) {

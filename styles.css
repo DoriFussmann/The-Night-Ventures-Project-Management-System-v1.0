@@ -21,6 +21,10 @@ p, a, button, input, textarea { font-weight: 400; }
 a { color: inherit; text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+/* Buttons that are anchors should not underline on hover */
+a.btn { text-decoration: none; }
+a.btn:hover, a.btn:focus, a.btn:active { text-decoration: none; }
+
 /* Layout */
 .layout { max-width: 1120px; margin-left: auto; margin-right: auto; padding-left: 16px; padding-right: 16px; }
 .stack > * + * { margin-top: 16px; }
@@ -48,6 +52,13 @@ a:hover { text-decoration: underline; }
 }
 .btn:hover { background: #f2f2f2; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Compact button size */
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 18px;
+}
 
 /* Button progress states (opt-in) */
 .btn-progress .state-working,
@@ -215,6 +226,9 @@ a:hover { text-decoration: underline; }
 .tasks-title { font-size: 14px; line-height: 20px; margin-bottom: 8px; }
 .task-button { width: 100%; text-align: left; display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 6px; background: #ffffff; transition: background-color 120ms ease, border-color 120ms ease; }
 .task-button:hover { background: #f2f2f2; }
+
+/* DnD states */
+.tasks-col.drag-over { outline: 2px dashed #d4d4d4; outline-offset: 4px; background: #fafafa; }
 
 /* Probability Map */
 .probability-map-container {
