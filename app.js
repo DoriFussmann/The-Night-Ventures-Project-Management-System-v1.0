@@ -190,8 +190,10 @@
   function renderHomeGrid() { var grid = document.getElementById('projectsGrid'); if (!grid) return; var map = readProjects(); var ids = Object.keys(map); grid.innerHTML = ''; ids.forEach(function(id) { var p = map[id]; var card = document.createElement('div'); card.className = 'project-card'; var hasLogo = p.imageDataUrl && typeof p.imageDataUrl === 'string' && p.imageDataUrl.length > 0; card.innerHTML = ((hasLogo ? '<img class="project-logo" src="' + p.imageDataUrl + '" alt="' + escapeHtml((p.name||'') + ' logo') + '">' : '<div class="project-logo" aria-hidden="true"></div>') + '<div class="project-name">' + escapeHtml(p.name || '') + '</div>' + '<div class="project-desc">' + escapeHtml(p.type || '') + '</div>'); card.addEventListener('click', function() { var modal = document.getElementById('addProjectModal'); if (modal && typeof modal.populateForEdit === 'function') { modal.populateForEdit(id, p); } }); grid.appendChild(card); }); }
 
   function renderHomeTasks() { var colTodo = document.getElementById('tasksColTodo'); var colDoing = document.getElementById('tasksColDoing'); var colDone = document.getElementById('tasksColDone'); if (!colTodo || !colDoing || !colDone) return; colTodo.innerHTML = ''; colDoing.innerHTML = ''; colDone.innerHTML = ''; colTodo.dataset.stage = 'todo'; colDoing.dataset.stage = 'doing'; colDone.dataset.stage = 'done'; var map = readProjects(); Object.keys(map).forEach(function(id) { var p = map[id]; function addButtons(tasks, container) { (tasks || []).forEach(function(task) { var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'task-button'; btn.draggable = true; btn.dataset.projectId = id; btn.dataset.stage = container.dataset.stage; btn.dataset.task = task; btn.textContent = (p.name || 'Untitled') + ' | ' + task; btn.addEventListener('dragstart', onDragStart); btn.addEventListener('dragend', function(){ btn.classList.remove('dragging'); }); container.appendChild(btn); }); } addButtons((p.tasks || {}).todo, colTodo); addButtons((p.tasks || {}).doing, colDoing); addButtons((p.tasks || {}).done, colDone); });
-    // Setup drop zones
-    [colTodo, colDoing, colDone].forEach(function(col) { col.addEventListener('dragover', function(e){ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; col.classList.add('drag-over'); }); col.addEventListener('dragleave', function(){ col.classList.remove('drag-over'); }); col.addEventListener('drop', function(e){ e.preventDefault(); col.classList.remove('drag-over'); var stage = col.dataset.stage; onDropTask(stage, e); }); });
+    // Setup drop zones on both inner and outer containers for robustness
+    function wireZone(inner, stage) { var outer = inner && inner.parentElement; function addHandlers(targetEl) { if (!targetEl) return; targetEl.addEventListener('dragover', function(e){ e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch(_) {} if (outer && outer.classList) outer.classList.add('drag-over'); }); targetEl.addEventListener('dragleave', function(){ if (outer && outer.classList) outer.classList.remove('drag-over'); }); targetEl.addEventListener('drop', function(e){ e.preventDefault(); if (outer && outer.classList) outer.classList.remove('drag-over'); onDropTask(stage, e); }); }
+      addHandlers(inner); addHandlers(outer); }
+    wireZone(colTodo, 'todo'); wireZone(colDoing, 'doing'); wireZone(colDone, 'done');
   }
 
   function onDragStart(e) { var t = e.target; try { e.dataTransfer.setData('text/plain', JSON.stringify({ projectId: t.dataset.projectId, stage: t.dataset.stage, task: t.dataset.task })); } catch(_) {} e.dataTransfer.effectAllowed = 'move'; t.classList.add('dragging'); }
@@ -247,6 +249,18 @@
     ];
     function renderPermissions(perms) {
       if (!permsTbody) return;
+      // SuperAdmin checkbox default unchecked
+      var superAdminEl = document.getElementById('userSuperAdmin');
+      if (superAdminEl) {
+        var isSuper = !!(perms && perms.__superAdmin === true);
+        superAdminEl.checked = isSuper;
+        superAdminEl.onchange = function(){
+          // When SuperAdmin is checked, check all; when unchecked, leave as-is
+          if (!permsTbody) return;
+          var inputs = permsTbody.querySelectorAll('input[type="checkbox"][data-perm-id]');
+          inputs.forEach(function(cb){ cb.checked = superAdminEl.checked ? true : cb.checked; });
+        };
+      }
       permsTbody.innerHTML = '';
       ALL_PAGES.forEach(function(pg){
         var tr = document.createElement('tr');
@@ -346,16 +360,41 @@
       open();
     };
 
-    function collectPermissions() {
+      function collectPermissions() {
       var result = {};
       if (!permsTbody) return result;
       var inputs = permsTbody.querySelectorAll('input[type="checkbox"][data-perm-id]');
       inputs.forEach(function(cb){ result[cb.getAttribute('data-perm-id')] = cb.checked; });
+        var superAdminEl = document.getElementById('userSuperAdmin');
+        if (superAdminEl && superAdminEl.checked) {
+          result.__superAdmin = true;
+          // Ensure all are true when superadmin
+          Object.keys(result).forEach(function(k){ if (k !== '__superAdmin') result[k] = true; });
+        } else {
+          result.__superAdmin = false;
+        }
       return result;
     }
   }
 
-  function setupTaskModal(openTaskBtn, projectModal) { var taskModal = document.getElementById('taskModal'); var taskTitle = document.getElementById('taskTitle'); var taskStage = document.getElementById('taskStage'); var taskShort = document.getElementById('taskShort'); var taskLong = document.getElementById('taskLong'); var taskDeadline = document.getElementById('taskDeadline'); var closeTaskModalBtn = document.getElementById('closeTaskModalBtn'); var cancelTaskBtn = document.getElementById('cancelTaskBtn'); var saveTaskBtn = document.getElementById('saveTaskBtn'); if (!taskModal) return; function clearTaskForm() { if (taskTitle) taskTitle.value = ''; if (taskStage) taskStage.value = 'todo'; if (taskShort) taskShort.value = ''; if (taskLong) taskLong.value = ''; if (taskDeadline) taskDeadline.value = ''; } function openTaskModal() { taskModal.setAttribute('aria-hidden', 'false'); var focusables = taskModal.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'); var first = focusables[0]; var last = focusables[focusables.length - 1]; trapFocus(taskModal, first, last); setTimeout(function() { if (taskTitle) taskTitle.focus(); }, 0); document.addEventListener('keydown', onEscape); } function closeTaskModal() { taskModal.setAttribute('aria-hidden', 'true'); releaseFocus(taskModal); document.removeEventListener('keydown', onEscape); if (projectModal && projectModal.setAttribute) { projectModal.setAttribute('aria-hidden', 'false'); } } function onEscape(e) { if (e.key === 'Escape') closeTaskModal(); } taskModal.openFromGlobal = function() { if (projectModal && projectModal.setAttribute) { projectModal.setAttribute('aria-hidden','true'); } var pickerRow = select('taskProjectPickerRow'); if (pickerRow) pickerRow.style.display = 'block'; clearTaskForm(); openTaskModal(); }; if (openTaskBtn) { openTaskBtn.addEventListener('click', function() { if (projectModal && projectModal.setAttribute) { projectModal.setAttribute('aria-hidden','true'); } var pickerRow = select('taskProjectPickerRow'); if (pickerRow) pickerRow.style.display = 'none'; if (taskModal) taskModal.__getSelectedProjectId = null; clearTaskForm(); openTaskModal(); }); } closeTaskModalBtn && closeTaskModalBtn.addEventListener('click', function() { closeTaskModal(); }); cancelTaskBtn && cancelTaskBtn.addEventListener('click', function() { closeTaskModal(); }); if (saveTaskBtn) { attachProgressCycle(saveTaskBtn); saveTaskBtn.addEventListener('click', function() { var targetProjectId = (taskModal && typeof taskModal.__getSelectedProjectId === 'function') ? taskModal.__getSelectedProjectId() : (projectModal && projectModal.__editingId); if (!targetProjectId) { targetProjectId = ensureProjectExistsFromForm(); if (projectModal) projectModal.__editingId = targetProjectId; } var map = readProjects(); var proj = map[targetProjectId] || {}; if (!proj.tasks) proj.tasks = { todo: [], doing: [], done: [] }; var entry = { title: taskTitle.value || '', short: taskShort.value || '', long: taskLong.value || '', deadline: taskDeadline.value || '' }; var stage = (taskStage && taskStage.value) || 'todo'; var display = entry.title || entry.short || '[Untitled Task]'; if (!proj.structuredTasks) proj.structuredTasks = { todo: [], doing: [], done: [] }; proj.structuredTasks[stage].push(entry); (proj.tasks[stage] = proj.tasks[stage] || []).push(display); map[targetProjectId] = proj; writeProjects(map); apiUpdateProject(targetProjectId, proj).catch(function(){}); renderProjects(); renderAdminTasks(); renderHomeGrid(); renderHomeTasks(); closeTaskModal(); if (taskModal) taskModal.__getSelectedProjectId = null; }); } function ensureProjectExistsFromForm() { var people = (select('projPeople').value || '').split(',').map(function(s){return s.trim();}).filter(Boolean); var payload = { name: select('projName').value || '', description: select('projDesc').value || '', individuals: people, source: (select('projSource') && select('projSource').value) || '', type: (select('projType') && select('projType').value) || '', status: (select('projStatus') && select('projStatus').value) || 'Live', monthlyImpact: parseCurrency(select('projMonthlyImpact') && select('projMonthlyImpact').value), hoursPerMonth: (select('projHoursPerMonth') && select('projHoursPerMonth').value) ? Number(select('projHoursPerMonth').value) : null, tasks: { todo: [], doing: [], done: [] }, structuredTasks: { todo: [], doing: [], done: [] }, imageDataUrl: (select('projImagePreview') && select('projImagePreview').src) || null }; var id = createProject(payload); return id; }
+  // Ensure we don't reopen project modal unless it was opened from project modal
+  ;(function(){
+    var originalSetupTaskModal = setupTaskModal;
+    setupTaskModal = function(openTaskBtn, projectModal){
+      originalSetupTaskModal(openTaskBtn, projectModal);
+      var taskModal = document.getElementById('taskModal'); if (!taskModal) return;
+      var openBtn = openTaskBtn;
+      if (openBtn) {
+        openBtn.addEventListener('click', function(){ taskModal.__restoreProjectModal = true; });
+      }
+      var closeTaskModalBtn = document.getElementById('closeTaskModalBtn');
+      function safeClosePatch(){ var modal = document.getElementById('taskModal'); if (!modal) return; var projModal = projectModal; if (projModal && projModal.setAttribute && !modal.__restoreProjectModal) { projModal.setAttribute('aria-hidden','true'); } modal.__restoreProjectModal = false; }
+      if (closeTaskModalBtn) closeTaskModalBtn.addEventListener('click', safeClosePatch);
+      var cancelTaskBtn = document.getElementById('cancelTaskBtn'); if (cancelTaskBtn) cancelTaskBtn.addEventListener('click', safeClosePatch);
+      var saveTaskBtn = document.getElementById('saveTaskBtn'); if (saveTaskBtn) saveTaskBtn.addEventListener('click', safeClosePatch);
+      var deleteTaskBtn = document.getElementById('deleteTaskBtn'); if (deleteTaskBtn) deleteTaskBtn.addEventListener('click', safeClosePatch);
+    };
+  })();
   }
 
   document.addEventListener('DOMContentLoaded', function() {

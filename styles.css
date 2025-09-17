@@ -239,6 +239,9 @@ a.btn:hover, a.btn:focus, a.btn:active { text-decoration: none; }
 .tasks-title { font-size: 14px; line-height: 20px; margin-bottom: 8px; }
 .task-button { width: 100%; text-align: left; display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 6px; background: #ffffff; transition: background-color 120ms ease, border-color 120ms ease; }
 .task-button:hover { background: #f2f2f2; }
+.task-button { cursor: grab; }
+.task-button.dragging { opacity: 0.6; cursor: grabbing; }
+.tasks-col.drag-over { background: #f9fafb; border-color: #cbd5e1; }
 
 /* Collapsible */
 details.collapsible {
