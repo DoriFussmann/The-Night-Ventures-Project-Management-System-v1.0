@@ -1,0 +1,108 @@
+[
+  {
+    "id": "097a5a09-b844-4fc9-8290-a314228eccc6",
+    "firstName": "Dori TNV",
+    "lastName": "Fussmann",
+    "email": "dori@thenightventures.com",
+    "password": "Hello214!",
+    "project": "p_kh9pk00e",
+    "projectName": "Snout",
+    "pageAccess": {
+      "home": true,
+      "bva": true,
+      "admin": true
+    },
+    "isSuperadmin": true,
+    "createdAt": "2025-09-17T20:39:13.471Z",
+    "updatedAt": "2025-09-17T21:00:20.286Z"
+  },
+  {
+    "id": "877214d7-b499-466e-b472-0732e90cadba",
+    "firstName": "Dori No Superadmin",
+    "lastName": "Fussmann",
+    "email": "dori.fussmann@gmail.com",
+    "password": "Hello214!",
+    "project": "p_oh4o0ylx",
+    "projectName": "Natrion",
+    "pageAccess": {
+      "home": true,
+      "bva": true,
+      "admin": true
+    },
+    "isSuperadmin": false,
+    "createdAt": "2025-09-17T20:39:39.234Z",
+    "updatedAt": "2025-09-17T20:49:27.385Z"
+  },
+  {
+    "id": "c37cb6b8-04cc-4efb-bd77-7281cedc84aa",
+    "firstName": "Mushon",
+    "lastName": "Ezra",
+    "email": "dori@gmail.com",
+    "password": "Hello214!",
+    "project": "p_de68v8nb",
+    "projectName": "Sniffi",
+    "pageAccess": {
+      "home": false,
+      "bva": true,
+      "csm": true,
+      "admin": true
+    },
+    "isSuperadmin": false,
+    "createdAt": "2025-09-17T21:19:41.929Z",
+    "updatedAt": "2025-09-17T21:29:33.798Z"
+  },
+  {
+    "id": "e2ad4d01-028c-43da-889c-4919ba7eab5d",
+    "firstName": "Arden",
+    "lastName": "Veyra",
+    "email": "arden@gmail.com",
+    "password": "Hello214!",
+    "project": "p_kh9pk00e",
+    "projectName": "Snout",
+    "pageAccess": {
+      "home": false,
+      "bva": false,
+      "csm": true,
+      "admin": false
+    },
+    "isSuperadmin": false,
+    "createdAt": "2025-09-17T22:36:29.931Z",
+    "updatedAt": "2025-09-17T22:36:29.931Z"
+  },
+  {
+    "id": "38231ad2-9fbb-4882-b9e6-d643b112f7df",
+    "firstName": "Liora",
+    "lastName": "Caelen",
+    "email": "liora@gmail.com",
+    "password": "Hello214!",
+    "project": "p_kh9pk00e",
+    "projectName": "Snout",
+    "pageAccess": {
+      "home": false,
+      "bva": false,
+      "csm": true,
+      "admin": false
+    },
+    "isSuperadmin": false,
+    "createdAt": "2025-09-17T22:36:52.404Z",
+    "updatedAt": "2025-09-17T22:36:52.404Z"
+  },
+  {
+    "id": "3c795633-9f0d-4c53-b96f-af02984e52d9",
+    "firstName": "Marek",
+    "lastName": "Soltren",
+    "email": "marek@gmail.com",
+    "password": "Hello214!",
+    "project": "p_kh9pk00e",
+    "projectName": "Snout",
+    "pageAccess": {
+      "home": false,
+      "bva": false,
+      "csm": true,
+      "admin": false
+    },
+    "isSuperadmin": false,
+    "createdAt": "2025-09-17T22:37:12.781Z",
+    "updatedAt": "2025-09-17T22:37:12.781Z"
+  }
+]

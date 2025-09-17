@@ -68,7 +68,7 @@
     "individuals": [],
     "source": "EarlyStageLabs",
     "type": "Fractional CFO",
-    "status": "Live",
+    "status": "Active",
     "monthlyImpact": 5000,
     "hoursPerMonth": 20,
     "tasks": {
@@ -103,7 +103,8 @@
     "id": "p_kh9pk00e",
     "slug": "snout",
     "createdAt": "2025-09-17T03:10:28.512Z",
-    "updatedAt": "2025-09-17T04:32:08.234Z"
+    "updatedAt": "2025-09-17T20:59:53.689Z",
+    "logo": "Snout Logo.png"
   },
   {
     "name": "Power BI Kit",
