@@ -18,12 +18,6 @@ export default function Admin() {
     logo: null
   })
   
-  // Mock data for pages
-  const mockProjects = [
-    { id: '1', name: 'Project Alpha', status: 'Active' },
-    { id: '2', name: 'Project Beta', status: 'Pipeline' },
-    { id: '3', name: 'Demo Project', status: 'Active' }
-  ]
   
   const pages = [
     { id: 'home', name: 'Home' },
@@ -71,39 +65,8 @@ export default function Admin() {
         setUsers(serverUsers);
       } catch (e) {
         console.error('Error loading users:', e);
-        // If server fails, use default mock data
-        setUsers([
-          {
-            id: '1',
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john.doe@example.com',
-            password: 'password123',
-            project: '1',
-            projectName: 'Project Alpha',
-            pageAccess: { home: true, bva: true, admin: false }
-          },
-          {
-            id: '2',
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane.smith@example.com',
-            password: 'securepass',
-            project: '2',
-            projectName: 'Project Beta',
-            pageAccess: { home: true, bva: false, admin: true }
-          },
-          {
-            id: '3',
-            firstName: 'Bob',
-            lastName: 'Johnson',
-            email: 'bob.johnson@example.com',
-            password: 'mypassword',
-            project: '3',
-            projectName: 'Demo Project',
-            pageAccess: { home: true, bva: true, admin: true }
-          }
-        ]);
+        // Show error instead of mock data
+        setUsers([]);
       }
 
       try {
@@ -112,8 +75,8 @@ export default function Admin() {
         setProjects(serverProjects);
       } catch (e) {
         console.error('Error loading projects:', e);
-        // If server fails, use default mock data
-        setProjects(mockProjects);
+        // Show error instead of mock data
+        setProjects([]);
       }
     };
     
