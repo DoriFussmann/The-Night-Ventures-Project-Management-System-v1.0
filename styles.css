@@ -239,6 +239,25 @@ a.btn:hover, a.btn:focus, a.btn:active { text-decoration: none; }
 .task-button { width: 100%; text-align: left; display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 6px; background: #ffffff; transition: background-color 120ms ease, border-color 120ms ease; }
 .task-button:hover { background: #f2f2f2; }
 
+/* Collapsible */
+details.collapsible {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+details.collapsible > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  border-bottom: 1px solid #eaeaea;
+}
+details.collapsible[open] > summary { border-bottom-color: #eaeaea; }
+details.collapsible > summary::-webkit-details-marker { display: none; }
+details.collapsible .collapsible-body { padding: 12px; }
+
 /* DnD states */
 .tasks-col.drag-over { outline: 2px dashed #d4d4d4; outline-offset: 4px; background: #fafafa; }
 
