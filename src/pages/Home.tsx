@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function Home() {
-  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
@@ -18,6 +18,7 @@ export default function Home() {
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
+          setShowLoginModal(false); // Hide login modal if user is already logged in
         }
       } catch (e) {
         console.log('Not logged in');
@@ -95,7 +96,9 @@ export default function Home() {
               <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>The Night Ventures</a>
             </h2>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <Link className="btn btn-sm" to="/admin">Admin</Link>
+                  {user && user.isSuperadmin && (
+                    <Link className="btn btn-sm" to="/admin">Admin</Link>
+                  )}
                   {user ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 14, color: '#171717' }}>
@@ -218,6 +221,9 @@ export default function Home() {
                   {Object.entries(user.pageAccess).map(([pageId, hasAccess]) => {
                     if (!hasAccess) return null;
                     
+                    // Only show Admin page for superadmins
+                    if (pageId === 'admin' && !user.isSuperadmin) return null;
+                    
                     const pageConfig = {
                       home: { name: 'Home', path: '/' },
                       bva: { name: 'BvA Dashboard', path: '/bva' },
@@ -270,32 +276,15 @@ export default function Home() {
             </div>
           </>
         ) : (
-          // Welcome Message (when not logged in)
+          // Empty state when not logged in
           <div style={{ textAlign: 'center', padding: 32 }}>
-            <h1 style={{ fontSize: 48, fontWeight: 300, margin: '0 0 16px 0', color: '#171717' }}>
-              The Night Ventures
-            </h1>
-            <p style={{ fontSize: 18, color: '#525252', margin: '0 0 32px 0' }}>
-              Welcome to our project management platform
-            </p>
-            <Link 
-              className="btn" 
-              to="/bva"
-              style={{ 
-                padding: '12px 24px', 
-                fontSize: 16,
-                textDecoration: 'none',
-                display: 'inline-block'
-              }}
-            >
-              View BvA Dashboard
-            </Link>
+            {/* Content removed - user needs to login to see anything */}
           </div>
         )}
       </div>
 
       {/* Login Modal */}
-      {showLoginModal && (
+      {showLoginModal && !user && !isLoading && (
         <div style={{
           position: 'fixed',
           top: 0,
