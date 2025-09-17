@@ -5,6 +5,7 @@ const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { randomUUID: nodeRandomUUID } = require('crypto');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -138,8 +139,9 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // For now, do simple password comparison (in production, use bcrypt)
-    if (user.password !== password) {
+    // Use bcrypt to verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -326,15 +328,24 @@ app.get('/api/users', async (req, res) => {
 app.post('/api/users', async (req, res) => {
   try {
     const users = await readCollection('users');
+    
+    // Hash the password before storing
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    
     const newUser = {
       id: nodeRandomUUID(),
       ...req.body,
+      password: hashedPassword, // Use hashed password
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     users.push(newUser);
     await writeCollection('users', users);
-    res.json(newUser);
+    
+    // Don't return the password in the response
+    const { password, ...userWithoutPassword } = newUser;
+    res.json(userWithoutPassword);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -348,9 +359,16 @@ app.put('/api/users/:id', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
+    // Hash password if it's being updated
+    let updateData = { ...req.body };
+    if (req.body.password) {
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(req.body.password, saltRounds);
+    }
+    
     users[index] = {
       ...users[index],
-      ...req.body,
+      ...updateData,
       updatedAt: new Date().toISOString()
     };
     

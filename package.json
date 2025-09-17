@@ -23,6 +23,7 @@
     "vite": "^7.1.5"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

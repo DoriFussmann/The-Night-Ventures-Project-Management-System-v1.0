@@ -4,7 +4,7 @@
     "firstName": "Dori TNV",
     "lastName": "Fussmann",
     "email": "dori@thenightventures.com",
-    "password": "Hello214!",
+    "password": "$2b$10$uCffH054oYahDLzuX1v6qONhga9YUn/L/6t9MiK49I/peOR/ahO/2",
     "project": "p_kh9pk00e",
     "projectName": "Snout",
     "pageAccess": {
@@ -21,7 +21,7 @@
     "firstName": "Dori No Superadmin",
     "lastName": "Fussmann",
     "email": "dori.fussmann@gmail.com",
-    "password": "Hello214!",
+    "password": "$2b$10$UgJ0TyCOjIIahllwiNVZxei7rlniz0Qlk3SWUYR7HpkXQB3D5CqNm",
     "project": "p_oh4o0ylx",
     "projectName": "Natrion",
     "pageAccess": {
@@ -38,7 +38,7 @@
     "firstName": "Mushon",
     "lastName": "Ezra",
     "email": "dori@gmail.com",
-    "password": "Hello214!",
+    "password": "$2b$10$j9X7IBmi3cWmQesddRh2t.TY9Bz96qI5A9Vt5ErSyx4CXNMGx8.tC",
     "project": "p_de68v8nb",
     "projectName": "Sniffi",
     "pageAccess": {
@@ -56,7 +56,7 @@
     "firstName": "Arden",
     "lastName": "Veyra",
     "email": "arden@gmail.com",
-    "password": "Hello214!",
+    "password": "$2b$10$OZ0hc98OTtDTU.hvJVnLkeNTqXbSnuwmy3kAK38Rh0qAc/HdxDtdG",
     "project": "p_kh9pk00e",
     "projectName": "Snout",
     "pageAccess": {
@@ -74,7 +74,7 @@
     "firstName": "Liora",
     "lastName": "Caelen",
     "email": "liora@gmail.com",
-    "password": "Hello214!",
+    "password": "$2b$10$SswGTZjVbrt6oBAqSbFSXeVC8xniTgSTi/Ul.bIvQciS.AMsgAFom",
     "project": "p_kh9pk00e",
     "projectName": "Snout",
     "pageAccess": {
@@ -92,7 +92,7 @@
     "firstName": "Marek",
     "lastName": "Soltren",
     "email": "marek@gmail.com",
-    "password": "Hello214!",
+    "password": "$2b$10$yMcGNQVF.NKtIcqs9qlUhOWAa.EXN.2H12WRxj5I6kVZvD2eCpTyW",
     "project": "p_kh9pk00e",
     "projectName": "Snout",
     "pageAccess": {
