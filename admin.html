@@ -29,6 +29,24 @@
     </section>
     <section class="section stack">
       <details class="collapsible">
+        <summary aria-controls="usersCollapse" aria-expanded="false">Users</summary>
+        <div id="usersCollapse" class="collapsible-body">
+          <table class="table" aria-label="Users list">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Email</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTbody"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+    <section class="section stack">
+      <details class="collapsible">
         <summary aria-controls="projectsCollapse" aria-expanded="false">Projects</summary>
         <div id="projectsCollapse" class="collapsible-body">
           <table class="table" aria-label="Projects list">
@@ -81,24 +99,6 @@
       </details>
     </section>
 
-    <section class="section stack">
-      <details class="collapsible">
-        <summary aria-controls="usersCollapse" aria-expanded="false">Users</summary>
-        <div id="usersCollapse" class="collapsible-body">
-          <table class="table" aria-label="Users list">
-            <thead>
-              <tr>
-                <th scope="col">Project</th>
-                <th scope="col">First Name</th>
-                <th scope="col">Last Name</th>
-                <th scope="col">Email</th>
-              </tr>
-            </thead>
-            <tbody id="adminUsersTbody"></tbody>
-          </table>
-        </div>
-      </details>
-    </section>
     <section class="section stack">
       <details class="collapsible">
         <summary aria-controls="tasksDoneCollapse" aria-expanded="false">Tasks — Done</summary>
@@ -328,6 +328,10 @@
           </div>
           <div class="stack">
             <div class="label">Permissions</div>
+            <div class="row" style="align-items: center; gap: 8px; margin-top: 8px;">
+              <input id="userSuperAdmin" type="checkbox" />
+              <label class="label" for="userSuperAdmin" style="margin: 0;">SuperAdmin (access to everything)</label>
+            </div>
             <table class="table" aria-label="User Permissions">
               <thead>
                 <tr>
