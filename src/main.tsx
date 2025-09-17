@@ -3,13 +3,21 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Home from './pages/Home'
 import Bva from './pages/Bva'
+import Admin from './pages/Admin'
+import Workspace from './pages/Workspace'
+import PageView from './pages/PageView'
+import Login from './pages/Login'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/bva" element={<Bva />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/app/:projectSlug" element={<Workspace />} />
+        <Route path="/app/:projectSlug/:pageSlug" element={<PageView />} />
         <Route
           path="*"
           element={
