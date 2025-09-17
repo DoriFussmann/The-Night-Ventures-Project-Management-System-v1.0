@@ -1,39 +1,5 @@
 [
   {
-    "id": "097a5a09-b844-4fc9-8290-a314228eccc6",
-    "firstName": "Dori TNV",
-    "lastName": "Fussmann",
-    "email": "dori@thenightventures.com",
-    "password": "$2b$10$uCffH054oYahDLzuX1v6qONhga9YUn/L/6t9MiK49I/peOR/ahO/2",
-    "project": "p_kh9pk00e",
-    "projectName": "Snout",
-    "pageAccess": {
-      "home": true,
-      "bva": true,
-      "admin": true
-    },
-    "isSuperadmin": true,
-    "createdAt": "2025-09-17T20:39:13.471Z",
-    "updatedAt": "2025-09-17T21:00:20.286Z"
-  },
-  {
-    "id": "877214d7-b499-466e-b472-0732e90cadba",
-    "firstName": "Dori No Superadmin",
-    "lastName": "Fussmann",
-    "email": "dori.fussmann@gmail.com",
-    "password": "$2b$10$UgJ0TyCOjIIahllwiNVZxei7rlniz0Qlk3SWUYR7HpkXQB3D5CqNm",
-    "project": "p_oh4o0ylx",
-    "projectName": "Natrion",
-    "pageAccess": {
-      "home": true,
-      "bva": true,
-      "admin": true
-    },
-    "isSuperadmin": false,
-    "createdAt": "2025-09-17T20:39:39.234Z",
-    "updatedAt": "2025-09-17T20:49:27.385Z"
-  },
-  {
     "id": "c37cb6b8-04cc-4efb-bd77-7281cedc84aa",
     "firstName": "Mushon",
     "lastName": "Ezra",
@@ -45,11 +11,11 @@
       "home": false,
       "bva": true,
       "csm": true,
-      "admin": true
+      "admin": false
     },
     "isSuperadmin": false,
     "createdAt": "2025-09-17T21:19:41.929Z",
-    "updatedAt": "2025-09-17T21:29:33.798Z"
+    "updatedAt": "2025-09-17T23:35:34.566Z"
   },
   {
     "id": "e2ad4d01-028c-43da-889c-4919ba7eab5d",
@@ -104,5 +70,23 @@
     "isSuperadmin": false,
     "createdAt": "2025-09-17T22:37:12.781Z",
     "updatedAt": "2025-09-17T22:37:12.781Z"
+  },
+  {
+    "id": "29a6b516-4517-4c87-aad3-1fe946649b78",
+    "firstName": "Dori",
+    "lastName": "Fussmann",
+    "email": "dori@thenightventures.com",
+    "password": "$2b$10$2SSJH3blyMoMe.V4Pi9jquVHvxEFbAHRk6LtdEo5hL.tW4WC7lECu",
+    "project": "p_kjdptfhl",
+    "projectName": "The Night Ventures",
+    "pageAccess": {
+      "home": true,
+      "bva": true,
+      "csm": true,
+      "admin": true
+    },
+    "isSuperadmin": true,
+    "createdAt": "2025-09-17T23:36:44.309Z",
+    "updatedAt": "2025-09-17T23:37:51.461Z"
   }
 ]
