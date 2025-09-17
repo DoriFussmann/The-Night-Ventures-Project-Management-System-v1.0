@@ -88,23 +88,5 @@
     "isSuperadmin": true,
     "createdAt": "2025-09-17T23:36:44.309Z",
     "updatedAt": "2025-09-17T23:37:51.461Z"
-  },
-  {
-    "id": "ccc43e81-12d9-411b-9a67-68aa182b1543",
-    "firstName": "Test",
-    "lastName": "j;lkj",
-    "email": "test@gmail.com",
-    "password": "$2b$10$Ga3N5c7RHw4/ZAqMW.3EwOc7wcrzrMVEtc7y19GzVJBQ5lBY5aUzG",
-    "project": "p_m71vbht6",
-    "projectName": "Power BI Kit",
-    "pageAccess": {
-      "home": false,
-      "bva": true,
-      "csm": true,
-      "admin": false
-    },
-    "isSuperadmin": false,
-    "createdAt": "2025-09-17T23:40:45.438Z",
-    "updatedAt": "2025-09-17T23:40:45.438Z"
   }
 ]

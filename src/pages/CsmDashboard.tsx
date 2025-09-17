@@ -247,11 +247,6 @@ export default function CsmDashboard() {
         <div className="layout" style={{ paddingTop: 16, paddingBottom: 16 }}>
           <nav aria-label="Primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <h1 style={{ margin: 0 }}><a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>The Night Ventures</a></h1>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <a className="btn btn-sm" href="/bva">BvA Dashboard</a>
-              <a className="btn btn-sm" href="/csm-dashboard">CSM Dashboard</a>
-              <a className="btn btn-sm" href="/admin">Admin</a>
-            </div>
           </nav>
         </div>
       </header>
@@ -265,33 +260,35 @@ export default function CsmDashboard() {
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              minWidth: 40,
-              minHeight: 40,
-              padding: 4
+              minWidth: 90,
+              minHeight: 72,
+              padding: 12
             }}>
               {user.projectLogo ? (
                 <img 
                   src={user.projectLogo} 
                   alt={`${user.projectName} logo`}
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 6,
-                    objectFit: 'cover',
+                    maxWidth: 72,
+                    maxHeight: 60,
+                    width: 'auto',
+                    height: 'auto',
+                    borderRadius: 8,
+                    objectFit: 'contain',
                     display: 'block',
                     flexShrink: 0
                   }}
                 />
               ) : (
                 <div style={{
-                  width: 32,
-                  height: 32,
+                  width: 60,
+                  height: 60,
                   background: '#f8f9fa',
-                  borderRadius: 6,
+                  borderRadius: 8,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 14,
+                  fontSize: 24,
                   fontWeight: 600,
                   color: '#666',
                   flexShrink: 0

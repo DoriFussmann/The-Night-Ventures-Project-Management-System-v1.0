@@ -6,6 +6,7 @@ export default function Home() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
+  const [projects, setProjects] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Check if user is already logged in on component mount
@@ -19,6 +20,11 @@ export default function Home() {
           const userData = await response.json();
           setUser(userData);
           setShowLoginModal(false); // Hide login modal if user is already logged in
+          
+          // Load projects if user is superadmin
+          if (userData.isSuperadmin) {
+            loadProjects();
+          }
         }
       } catch (e) {
         console.log('Not logged in');
@@ -29,6 +35,21 @@ export default function Home() {
     
     checkAuthStatus();
   }, []);
+
+  // Load projects for superadmin users
+  const loadProjects = async () => {
+    try {
+      const response = await fetch('/api/projects', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const projectsData = await response.json();
+        setProjects(projectsData);
+      }
+    } catch (e) {
+      console.error('Failed to load projects:', e);
+    }
+  };
 
   // Handle login form submission
   const handleLogin = async (e) => {
@@ -55,6 +76,12 @@ export default function Home() {
         setShowLoginModal(false);
         setEmail('');
         setPassword('');
+        
+        // Load projects if user is superadmin
+        if (userData.isSuperadmin) {
+          loadProjects();
+        }
+        
         alert(`Welcome back, ${userData.firstName}!`);
       } else {
         const error = await response.json();
@@ -124,9 +151,94 @@ export default function Home() {
           </div>
         </div>
       </header>
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 80, position: 'relative' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: 40, position: 'relative' }}>
         {user ? (
           <>
+            {/* Projects Grid - Only for Superadmins - Full Width */}
+            {user.isSuperadmin && projects.length > 0 && (
+              <div style={{
+                width: '100%',
+                background: 'white',
+                borderBottom: '1px solid #e5e5e5',
+                padding: '24px 0'
+              }}>
+                <div style={{ maxWidth: 1120, marginLeft: 'auto', marginRight: 'auto', paddingLeft: 16, paddingRight: 16 }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: 16,
+                    width: '100%'
+                  }}>
+                    {projects.map((project) => (
+                      <div
+                        key={project.id}
+                        style={{
+                          background: '#f8f9fa',
+                          border: '1px solid #e5e5e5',
+                          borderRadius: 8,
+                          padding: 16,
+                          textAlign: 'center',
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      >
+                        {/* Project Logo */}
+                        <div style={{ marginBottom: 12, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {project.imageDataUrl ? (
+                            <img
+                              src={project.imageDataUrl}
+                              alt={`${project.name} logo`}
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '60px',
+                                width: 'auto',
+                                height: 'auto',
+                                borderRadius: 6,
+                                objectFit: 'contain'
+                              }}
+                            />
+                          ) : (
+                            <div style={{
+                              width: 48,
+                              height: 48,
+                              background: '#dee2e6',
+                              borderRadius: 6,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 18,
+                              fontWeight: 600,
+                              color: '#6c757d'
+                            }}>
+                              {project.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Project Name */}
+                        <div style={{
+                          fontSize: 14,
+                          fontWeight: 500,
+                          color: '#171717',
+                          lineHeight: '1.3',
+                          textAlign: 'left'
+                        }}>
+                          {project.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* User Details and Navigation Container */}
             <div style={{ 
@@ -134,8 +246,10 @@ export default function Home() {
               flexDirection: 'column', 
               alignItems: 'center',
               gap: 24,
-              maxWidth: 600,
-              width: '100%'
+              width: '100%',
+              paddingLeft: 20,
+              paddingRight: 20,
+              paddingTop: user.isSuperadmin && projects.length > 0 ? 40 : 0
             }}>
               {/* User Details Window */}
               <div style={{ 
@@ -169,54 +283,58 @@ export default function Home() {
                     <span style={{ fontSize: 13, color: '#171717' }}>{user.email}</span>
                   </div>
 
-                  {/* Project */}
+                  {/* Project Logo - Centered */}
                   {user.projectName && user.projectName !== 'No project assigned' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f3f4' }}>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: '#333' }}>Project:</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {/* Project Logo */}
-                        {user.projectLogo ? (
-                          <img 
-                            src={user.projectLogo} 
-                            alt={`${user.projectName} logo`}
-                            style={{
-                              width: 24,
-                              height: 24,
-                              borderRadius: 4,
-                              objectFit: 'cover'
-                            }}
-                          />
-                        ) : (
-                          <div style={{
-                            width: 24,
-                            height: 24,
-                            background: '#f8f9fa',
-                            borderRadius: 4,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: '#666'
-                          }}>
-                            {user.projectName.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <span style={{ fontSize: 13, color: '#171717' }}>{user.projectName}</span>
-                      </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      padding: '20px 0 10px 0'
+                    }}>
+                      {user.projectLogo ? (
+                        <img 
+                          src={user.projectLogo} 
+                          alt={`${user.projectName} logo`}
+                          style={{
+                            maxWidth: '90%',
+                            maxHeight: '120px',
+                            width: 'auto',
+                            height: 'auto',
+                            borderRadius: 8,
+                            objectFit: 'contain',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '200px',
+                          height: '80px',
+                          background: '#f8f9fa',
+                          borderRadius: 8,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 32,
+                          fontWeight: 600,
+                          color: '#666',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                        }}>
+                          {user.projectName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Page Access Navigation Boxes */}
+              {/* Page Access Navigation Buttons */}
               {user.pageAccess && (
                 <div style={{ 
                   display: 'flex', 
-                  gap: 16, 
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                  width: '100%'
+                  gap: 8, 
+                  width: '100%',
+                  maxWidth: 500,
+                  flexWrap: 'wrap'
                 }}>
                   {Object.entries(user.pageAccess).map(([pageId, hasAccess]) => {
                     if (!hasAccess) return null;
@@ -238,36 +356,20 @@ export default function Home() {
                       <Link
                         key={pageId}
                         to={config.path}
+                        className="btn btn-sm"
                         style={{
+                          flex: 1,
                           textDecoration: 'none',
-                          background: 'white',
-                          border: '1px solid #e5e5e5',
-                          borderRadius: 12,
-                          padding: '20px',
-                          minWidth: 140,
                           textAlign: 'center',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                          transition: 'all 0.2s ease',
-                          cursor: 'pointer',
-                          display: 'block'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                          fontSize: 12,
+                          padding: '4px 8px',
+                          minHeight: '28px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
                       >
-                        <div style={{ 
-                          fontSize: 14, 
-                          fontWeight: 500, 
-                          color: '#171717',
-                          lineHeight: '1.2'
-                        }}>
-                          {config.name}
-                        </div>
+                        {config.name}
                       </Link>
                     );
                   })}
