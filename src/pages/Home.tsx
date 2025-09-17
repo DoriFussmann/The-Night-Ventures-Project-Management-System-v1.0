@@ -10,7 +10,6 @@ export default function Home() {
             <h1 style={{ margin: 0 }}><a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>The Night Ventures</a></h1>
             <div style={{ display: 'flex', gap: 8 }}>
               <a className="btn btn-sm" href="/bva">BvA Test</a>
-              <a className="btn btn-sm" href="/probability-map.html">Probability Map</a>
               <a className="btn btn-sm" href="/admin.html">Admin</a>
             </div>
           </nav>
