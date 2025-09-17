@@ -1,6 +1,7 @@
 /* Global base */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
+html { scrollbar-gutter: stable; }
 body {
   margin: 0;
   background: #ffffff;
@@ -253,10 +254,24 @@ details.collapsible > summary {
   line-height: 20px;
   font-weight: 500;
   border-bottom: 1px solid #eaeaea;
+  position: relative;
+  padding-right: 32px; /* space for arrow */
 }
 details.collapsible[open] > summary { border-bottom-color: #eaeaea; }
 details.collapsible > summary::-webkit-details-marker { display: none; }
 details.collapsible .collapsible-body { padding: 12px; }
+
+/* Right-aligned arrow indicator */
+details.collapsible > summary::after {
+  content: '▸';
+  position: absolute;
+  right: 12px;
+  color: #6b7280;
+  transition: transform 160ms ease;
+}
+details.collapsible[open] > summary::after {
+  content: '▾';
+}
 
 /* DnD states */
 .tasks-col.drag-over { outline: 2px dashed #d4d4d4; outline-offset: 4px; background: #fafafa; }
