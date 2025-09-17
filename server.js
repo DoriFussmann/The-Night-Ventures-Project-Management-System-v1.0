@@ -31,9 +31,21 @@ async function ensureContentDir() {
 async function readCollection(name) {
   const filePath = path.join(CONTENT_DIR, `${name}.json`);
   try {
+    console.log(`[DEBUG readCollection] Attempting to read: ${filePath}`);
+    const exists = fs.existsSync(filePath);
+    console.log(`[DEBUG readCollection] File exists: ${exists}`);
+    
+    if (!exists) {
+      console.log(`[DEBUG readCollection] File does not exist, returning empty array`);
+      return [];
+    }
+    
     const data = await fsp.readFile(filePath, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    console.log(`[DEBUG readCollection] Successfully parsed ${parsed.length} items from ${name}`);
+    return parsed;
   } catch (e) {
+    console.error(`[ERROR readCollection] Failed to read ${filePath}:`, e);
     return [];
   }
 }
@@ -241,9 +253,15 @@ app.get('/api/auth/me', async (req, res) => {
 // Generic collection endpoints
 app.get('/api/:collection', async (req, res) => {
   try {
+    console.log(`[DEBUG] Fetching collection: ${req.params.collection}`);
+    console.log(`[DEBUG] Content dir: ${CONTENT_DIR}`);
+    console.log(`[DEBUG] __dirname: ${__dirname}`);
+    
     const data = await readCollection(req.params.collection);
+    console.log(`[DEBUG] Found ${data.length} items in ${req.params.collection}`);
     res.json(data);
   } catch (e) {
+    console.error(`[ERROR] Failed to read collection ${req.params.collection}:`, e);
     res.status(500).json({ error: e.message });
   }
 });
