@@ -28,8 +28,8 @@
       </div>
     </section>
     <section class="section stack">
-      <details class="collapsible" open>
-        <summary aria-controls="projectsCollapse" aria-expanded="true">Projects</summary>
+      <details class="collapsible">
+        <summary aria-controls="projectsCollapse" aria-expanded="false">Projects</summary>
         <div id="projectsCollapse" class="collapsible-body">
           <table class="table" aria-label="Projects list">
             <thead>
@@ -47,58 +47,74 @@
     </section>
 
     <section class="section stack">
-      <h2>Tasks — Do</h2>
-      <table class="table" aria-label="Tasks Do">
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">Task</th>
-            <th scope="col">Deadline</th>
-          </tr>
-        </thead>
-        <tbody id="adminTasksTodo"></tbody>
-      </table>
+      <details class="collapsible">
+        <summary aria-controls="tasksDoCollapse" aria-expanded="false">Tasks — Do</summary>
+        <div id="tasksDoCollapse" class="collapsible-body">
+          <table class="table" aria-label="Tasks Do">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Task</th>
+                <th scope="col">Deadline</th>
+              </tr>
+            </thead>
+            <tbody id="adminTasksTodo"></tbody>
+          </table>
+        </div>
+      </details>
     </section>
     <section class="section stack">
-      <h2>Tasks — Doing</h2>
-      <table class="table" aria-label="Tasks Doing">
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">Task</th>
-            <th scope="col">Deadline</th>
-          </tr>
-        </thead>
-        <tbody id="adminTasksDoing"></tbody>
-      </table>
+      <details class="collapsible">
+        <summary aria-controls="tasksDoingCollapse" aria-expanded="false">Tasks — Doing</summary>
+        <div id="tasksDoingCollapse" class="collapsible-body">
+          <table class="table" aria-label="Tasks Doing">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Task</th>
+                <th scope="col">Deadline</th>
+              </tr>
+            </thead>
+            <tbody id="adminTasksDoing"></tbody>
+          </table>
+        </div>
+      </details>
     </section>
 
     <section class="section stack">
-      <h2>Users</h2>
-      <table class="table" aria-label="Users list">
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">First Name</th>
-            <th scope="col">Last Name</th>
-            <th scope="col">Email</th>
-          </tr>
-        </thead>
-        <tbody id="adminUsersTbody"></tbody>
-      </table>
+      <details class="collapsible">
+        <summary aria-controls="usersCollapse" aria-expanded="false">Users</summary>
+        <div id="usersCollapse" class="collapsible-body">
+          <table class="table" aria-label="Users list">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Email</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTbody"></tbody>
+          </table>
+        </div>
+      </details>
     </section>
     <section class="section stack">
-      <h2>Tasks — Done</h2>
-      <table class="table" aria-label="Tasks Done">
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">Task</th>
-            <th scope="col">Deadline</th>
-          </tr>
-        </thead>
-        <tbody id="adminTasksDone"></tbody>
-      </table>
+      <details class="collapsible">
+        <summary aria-controls="tasksDoneCollapse" aria-expanded="false">Tasks — Done</summary>
+        <div id="tasksDoneCollapse" class="collapsible-body">
+          <table class="table" aria-label="Tasks Done">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Task</th>
+                <th scope="col">Deadline</th>
+              </tr>
+            </thead>
+            <tbody id="adminTasksDone"></tbody>
+          </table>
+        </div>
+      </details>
     </section>
 
     
