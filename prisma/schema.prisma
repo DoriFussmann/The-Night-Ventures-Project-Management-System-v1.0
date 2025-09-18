@@ -46,3 +46,24 @@ model Task {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Collection {
+  id        String   @id @default(cuid())
+  slug      String   @unique      // e.g. "tasks"
+  label     String               // e.g. "Tasks"
+  schema    Json                 // JSON schema for fields (UI uses this)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items     Item[]
+}
+
+model Item {
+  id           String     @id @default(cuid())
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  data         Json       // the actual record, shape defined by Collection.schema
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([collectionId])
+}

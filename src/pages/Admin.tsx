@@ -35,6 +35,10 @@ function AdminPage() {
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
   
+  // Collections state
+  const [collections, setCollections] = useState([])
+  const [tasksCollection, setTasksCollection] = useState(null)
+  
   const [editingUser, setEditingUser] = useState(null)
   const [editingProject, setEditingProject] = useState(null)
   const [editingTask, setEditingTask] = useState(null)
@@ -80,9 +84,38 @@ function AdminPage() {
       }
 
       try {
-        // Load tasks
-        const serverTasks = await apiCall('/api/tasks');
-        setTasks(serverTasks);
+        // Load collections
+        const serverCollections = await apiCall('/api/collections');
+        setCollections(serverCollections);
+        
+        // Find tasks collection
+        const tasksCol = serverCollections.find(col => col.slug === 'tasks');
+        if (tasksCol) {
+          setTasksCollection(tasksCol);
+          
+          // Load tasks from collections API
+          const tasksResponse = await apiCall(`/api/collections/tasks/items`);
+          const taskItems = tasksResponse.items || tasksResponse; // Handle both paginated and direct responses
+          
+          // Transform items to match expected task format
+          const transformedTasks = taskItems.map(item => ({
+            id: item.id,
+            title: item.data.title,
+            description: item.data.description,
+            status: item.data.status,
+            project: item.data.project,
+            projectName: item.data.projectName,
+            assignee: item.data.assignee,
+            dueDate: item.data.dueDate,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt
+          }));
+          
+          setTasks(transformedTasks);
+        } else {
+          console.warn('Tasks collection not found');
+          setTasks([]);
+        }
       } catch (e) {
         console.error('Error loading tasks:', e);
         setTasks([]);
@@ -223,24 +256,39 @@ function AdminPage() {
       // Get project name for display
       const selectedProject = projects.find(p => p.id === taskFormData.project)
       
-      // Create new task object
-      const newTaskData = {
+      // Create new task data object for Collections API
+      const taskData = {
         title: taskFormData.title,
         description: taskFormData.description,
         status: taskFormData.status,
         project: taskFormData.project,
         projectName: selectedProject ? selectedProject.name : null,
+        assignee: taskFormData.assignee || null,
         dueDate: taskFormData.dueDate || null
       }
 
-      // Save to server
-      const savedTask = await apiCall('/api/tasks', {
+      // Save to server via Collections API
+      const savedItem = await apiCall('/api/collections/tasks/items', {
         method: 'POST',
-        body: JSON.stringify(newTaskData)
+        body: JSON.stringify({ data: taskData })
       });
 
+      // Transform saved item to match expected task format
+      const transformedTask = {
+        id: savedItem.id,
+        title: savedItem.data.title,
+        description: savedItem.data.description,
+        status: savedItem.data.status,
+        project: savedItem.data.project,
+        projectName: savedItem.data.projectName,
+        assignee: savedItem.data.assignee,
+        dueDate: savedItem.data.dueDate,
+        createdAt: savedItem.createdAt,
+        updatedAt: savedItem.updatedAt
+      };
+
       // Add task to local state
-      setTasks(prev => [...prev, savedTask])
+      setTasks(prev => [...prev, transformedTask])
       
       // Reset form and close modal
       setTaskFormData({
@@ -252,7 +300,7 @@ function AdminPage() {
       })
       setShowAddTaskModal(false)
       
-      alert(`Task "${savedTask.title}" has been added successfully!`)
+      alert(`Task "${transformedTask.title}" has been added successfully!`)
     } catch (e) {
       console.error('Error adding task:', e);
       alert('Failed to add task: ' + e.message);

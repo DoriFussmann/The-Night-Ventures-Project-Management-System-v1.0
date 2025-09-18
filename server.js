@@ -30,6 +30,22 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Utility function to ensure a collection exists
+async function ensureCollection(slug, label, schema) {
+  try {
+    const collection = await prisma.collection.upsert({
+      where: { slug },
+      update: { label, schema },
+      create: { slug, label, schema }
+    });
+    console.log(`Collection "${slug}" ensured:`, collection.id);
+    return collection;
+  } catch (error) {
+    console.error(`Error ensuring collection "${slug}":`, error);
+    throw error;
+  }
+}
+
 // Middleware
 app.use(cors());
 app.use(cookieParser());
@@ -383,6 +399,199 @@ app.delete('/api/tasks/:id', requireAuth, requireSuperadmin, requireAdminWrites,
     res.json({ ok: true, id: deletedTask.id });
   } catch (e) {
     console.error('Error deleting task:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Dynamic Collections API endpoints
+app.get('/api/collections', async (req, res) => {
+  try {
+    const collections = await prisma.collection.findMany({
+      select: {
+        id: true,
+        slug: true,
+        label: true,
+        schema: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+    res.json(collections);
+  } catch (e) {
+    console.error('Error fetching collections:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/collections', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
+  try {
+    const { slug, label, schema } = req.body;
+    
+    if (!slug || !label || !schema) {
+      return res.status(400).json({ error: 'slug, label, and schema are required' });
+    }
+
+    const collection = await prisma.collection.upsert({
+      where: { slug },
+      update: { label, schema },
+      create: { slug, label, schema }
+    });
+    
+    res.json(collection);
+  } catch (e) {
+    console.error('Error creating/updating collection:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/collections/:slug/items', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+
+    // Verify collection exists
+    const collection = await prisma.collection.findUnique({
+      where: { slug }
+    });
+    
+    if (!collection) {
+      return res.status(404).json({ error: 'Collection not found' });
+    }
+
+    const items = await prisma.item.findMany({
+      where: { collectionId: collection.id },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
+    });
+
+    const total = await prisma.item.count({
+      where: { collectionId: collection.id }
+    });
+
+    res.json({
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (e) {
+    console.error('Error fetching collection items:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/collections/:slug/items', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { data } = req.body;
+
+    if (!data) {
+      return res.status(400).json({ error: 'data is required' });
+    }
+
+    // Verify collection exists
+    const collection = await prisma.collection.findUnique({
+      where: { slug }
+    });
+    
+    if (!collection) {
+      return res.status(404).json({ error: 'Collection not found' });
+    }
+
+    const item = await prisma.item.create({
+      data: {
+        collectionId: collection.id,
+        data
+      }
+    });
+
+    res.json(item);
+  } catch (e) {
+    console.error('Error creating collection item:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/collections/:slug/items/:id', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
+  try {
+    const { slug, id } = req.params;
+    const { data } = req.body;
+
+    if (!data) {
+      return res.status(400).json({ error: 'data is required' });
+    }
+
+    // Verify collection exists
+    const collection = await prisma.collection.findUnique({
+      where: { slug }
+    });
+    
+    if (!collection) {
+      return res.status(404).json({ error: 'Collection not found' });
+    }
+
+    // Verify item exists and belongs to collection
+    const existingItem = await prisma.item.findFirst({
+      where: { 
+        id,
+        collectionId: collection.id 
+      }
+    });
+
+    if (!existingItem) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    const item = await prisma.item.update({
+      where: { id },
+      data: { data }
+    });
+
+    res.json(item);
+  } catch (e) {
+    console.error('Error updating collection item:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/collections/:slug/items/:id', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
+  try {
+    const { slug, id } = req.params;
+
+    // Verify collection exists
+    const collection = await prisma.collection.findUnique({
+      where: { slug }
+    });
+    
+    if (!collection) {
+      return res.status(404).json({ error: 'Collection not found' });
+    }
+
+    // Verify item exists and belongs to collection
+    const existingItem = await prisma.item.findFirst({
+      where: { 
+        id,
+        collectionId: collection.id 
+      }
+    });
+
+    if (!existingItem) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    await prisma.item.delete({
+      where: { id }
+    });
+
+    res.json({ ok: true, id });
+  } catch (e) {
+    console.error('Error deleting collection item:', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -794,6 +1003,19 @@ async function migrateOldData() {
 async function startup() {
   await ensureContentDir();
   await migrateOldData();
+  
+  // Ensure default collections exist
+  if (ADMIN_ENABLED === true) {
+    const tasksSchema = {
+      "fields": [
+        { "key": "title", "label": "Title", "type": "string", "required": true },
+        { "key": "status", "label": "Status", "type": "string", "enum": ["todo","doing","done"], "required": true },
+        { "key": "assignee", "label": "Assignee", "type": "string" },
+        { "key": "dueDate", "label": "Due Date", "type": "date" }
+      ]
+    };
+    await ensureCollection('tasks', 'Tasks', tasksSchema);
+  }
   
   const collections = await getCollections();
   console.log(`[BOOT] Detected collections: [${collections.join(', ')}]`);
