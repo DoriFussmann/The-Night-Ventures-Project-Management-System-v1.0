@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import withPageAccess from '../lib/withPageAccess'
 
-export default function Admin() {
+function AdminPage() {
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [userFormData, setUserFormData] = useState({
@@ -19,19 +20,8 @@ export default function Admin() {
   })
   
   
-  const pages = [
-    { id: 'home', name: 'Home' },
-    { id: 'bva', name: 'BvA Dashboard' },
-    { id: 'csm', name: 'CSM Dashboard' },
-    { id: 'admin', name: 'Admin' }
-  ]
-  
-  const [pageAccess, setPageAccess] = useState({
-    home: false,
-    bva: false,
-    csm: false,
-    admin: false
-  })
+  const [pages, setPages] = useState([])
+  const [pageAccess, setPageAccess] = useState({})
   
   const [users, setUsers] = useState([])
   const [projects, setProjects] = useState([])
@@ -77,6 +67,22 @@ export default function Admin() {
         console.error('Error loading projects:', e);
         // Show error instead of mock data
         setProjects([]);
+      }
+
+      try {
+        // Load pages registry
+        const serverPages = await apiCall('/api/pages');
+        setPages(serverPages);
+        
+        // Initialize pageAccess state with all pages set to false
+        const initialPageAccess = {};
+        serverPages.forEach(page => {
+          initialPageAccess[page.slug] = false;
+        });
+        setPageAccess(initialPageAccess);
+      } catch (e) {
+        console.error('Error loading pages:', e);
+        setPages([]);
       }
     };
     
@@ -127,12 +133,12 @@ export default function Admin() {
         project: '',
         isSuperadmin: false
       })
-      setPageAccess({
-        home: false,
-        bva: false,
-        csm: false,
-        admin: false
-      })
+      // Reset pageAccess to all false based on current pages
+      const resetPageAccess = {};
+      pages.forEach(page => {
+        resetPageAccess[page.slug] = false;
+      });
+      setPageAccess(resetPageAccess)
       setShowAddUserModal(false)
       
       alert(`User ${savedUser.firstName} ${savedUser.lastName} has been added successfully!`)
@@ -236,7 +242,7 @@ export default function Admin() {
       // Get updated page access from checkboxes
       const updatedPageAccess = {}
       pages.forEach(page => {
-        updatedPageAccess[page.id] = formData.get(`page-${page.id}`) === 'on'
+        updatedPageAccess[page.slug] = formData.get(`page-${page.slug}`) === 'on'
       })
       
       // Get project name for display
@@ -634,22 +640,22 @@ export default function Admin() {
                 </label>
                 <div style={{ border: '1px solid #ddd', borderRadius: 6, padding: 16 }}>
                   {pages.map(page => (
-                    <div key={page.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                    <div key={page.slug} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                       <input
                         type="checkbox"
-                        id={`page-${page.id}`}
-                        checked={pageAccess[page.id as keyof typeof pageAccess]}
+                        id={`page-${page.slug}`}
+                        checked={pageAccess[page.slug] || false}
                         onChange={(e) => setPageAccess(prev => ({ 
                           ...prev, 
-                          [page.id]: e.target.checked 
+                          [page.slug]: e.target.checked 
                         }))}
                         style={{ marginRight: 8 }}
                       />
                       <label 
-                        htmlFor={`page-${page.id}`}
+                        htmlFor={`page-${page.slug}`}
                             style={{ fontSize: 13, color: '#333', cursor: 'pointer' }}
                       >
-                        {page.name}
+                        {page.label}
                       </label>
                     </div>
                   ))}
@@ -860,19 +866,19 @@ export default function Admin() {
                 </label>
                 <div style={{ border: '1px solid #ddd', borderRadius: 6, padding: 16 }}>
                   {pages.map(page => (
-                    <div key={page.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                    <div key={page.slug} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                       <input
                         type="checkbox"
-                        id={`edit-page-${page.id}`}
-                        name={`page-${page.id}`}
-                        defaultChecked={editingUser.pageAccess?.[page.id] || false}
+                        id={`edit-page-${page.slug}`}
+                        name={`page-${page.slug}`}
+                        defaultChecked={editingUser.pageAccess?.[page.slug] || false}
                         style={{ marginRight: 8 }}
                       />
                       <label 
-                        htmlFor={`edit-page-${page.id}`}
+                        htmlFor={`edit-page-${page.slug}`}
                             style={{ fontSize: 13, color: '#333', cursor: 'pointer' }}
                       >
-                        {page.name}
+                        {page.label}
                       </label>
                     </div>
                   ))}
@@ -1270,3 +1276,5 @@ export default function Admin() {
         </main>
       )
     }
+
+export default withPageAccess(AdminPage, 'admin');

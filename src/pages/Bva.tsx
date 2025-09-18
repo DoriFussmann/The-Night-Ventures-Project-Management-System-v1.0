@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import withPageAccess from '../lib/withPageAccess'
 
 type Row = Record<string, string>
 
@@ -45,7 +46,7 @@ function parseCSV(text: string) {
   return { headers, rows }
 }
 
-export default function Bva() {
+function BvaPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<{ headers: string[]; rows: Row[] } | null>(null)
@@ -380,4 +381,4 @@ export default function Bva() {
   )
 }
 
-
+export default withPageAccess(BvaPage, 'bva');

@@ -11,3 +11,5 @@ Thumbs.db
 # Ignore temp files only, keep content JSONs
 content/*.tmp-*
 
+
+/src/generated/prisma

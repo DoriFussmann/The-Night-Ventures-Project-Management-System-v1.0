@@ -8,7 +8,15 @@
     "build": "vite build",
     "start": "node server.js",
     "preview": "concurrently \"vite preview --port 5173\" \"node server.js\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:deploy": "prisma migrate deploy",
+    "db:check": "node scripts/dbCheck.js",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:import": "node scripts/importFromJson.js"
   },
   "keywords": [],
   "author": "",
@@ -24,10 +32,15 @@
     "vite": "^7.1.5"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.2",
     "bcrypt": "^6.0.0",
     "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
+    "prisma": "^6.16.2"
   }
 }

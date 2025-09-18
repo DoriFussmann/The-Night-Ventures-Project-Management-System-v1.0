@@ -2,6 +2,13 @@
 
 A lightweight project management system for tracking projects, tasks, and team members.
 
+## Dev DB
+
+1) Set DATABASE_URL in .env.local to a **shared** Postgres (Vercel Postgres/Neon/Supabase).
+2) npm run db:generate && npm run db:migrate
+3) npm run db:import
+4) npm run db:check  (should print [DB] OK)
+
 ## 🚀 Quick Start
 
 ### First Time Setup (New Machine)

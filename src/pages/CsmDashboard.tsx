@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import withPageAccess from '../lib/withPageAccess'
 
-export default function CsmDashboard() {
+function CsmDashboardPage() {
   const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -491,3 +492,5 @@ export default function CsmDashboard() {
     </>
   )
 }
+
+export default withPageAccess(CsmDashboardPage, 'csm');
