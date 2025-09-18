@@ -318,6 +318,75 @@ app.delete('/api/projects/:id', requireAdminWrites, async (req, res) => {
   }
 });
 
+// Tasks management endpoints
+app.get('/api/tasks', requireAuth, requireSuperadmin, async (req, res) => {
+  try {
+    const tasks = await prisma.task.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(tasks);
+  } catch (e) {
+    console.error('Error fetching tasks:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/tasks', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
+  try {
+    const newTask = await prisma.task.create({
+      data: {
+        title: req.body.title || 'Untitled Task',
+        description: req.body.description || null,
+        status: req.body.status || 'todo',
+        priority: req.body.priority || 'medium',
+        assignee: req.body.assignee || null,
+        project: req.body.project || null,
+        projectName: req.body.projectName || null,
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null
+      }
+    });
+    res.json(newTask);
+  } catch (e) {
+    console.error('Error creating task:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/tasks/:id', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
+  try {
+    const updatedTask = await prisma.task.update({
+      where: { id: req.params.id },
+      data: {
+        title: req.body.title || undefined,
+        description: req.body.description || undefined,
+        status: req.body.status || undefined,
+        priority: req.body.priority || undefined,
+        assignee: req.body.assignee || undefined,
+        project: req.body.project || undefined,
+        projectName: req.body.projectName || undefined,
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : undefined
+      }
+    });
+    res.json(updatedTask);
+  } catch (e) {
+    console.error('Error updating task:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/tasks/:id', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
+  try {
+    const deletedTask = await prisma.task.delete({
+      where: { id: req.params.id },
+      select: { id: true }
+    });
+    res.json({ ok: true, id: deletedTask.id });
+  } catch (e) {
+    console.error('Error deleting task:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Authentication endpoints (must be before generic collection routes)
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {

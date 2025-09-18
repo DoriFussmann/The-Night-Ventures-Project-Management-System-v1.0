@@ -32,3 +32,17 @@ model Project {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String?  // todo, doing, done
+  priority    String?  // low, medium, high
+  assignee    String?  // user_id or name
+  project     String?  // project_id
+  projectName String?
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

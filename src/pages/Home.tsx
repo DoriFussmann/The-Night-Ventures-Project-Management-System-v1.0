@@ -7,6 +7,7 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [projects, setProjects] = useState([])
+  const [tasks, setTasks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Check if user is already logged in on component mount
@@ -21,9 +22,10 @@ export default function Home() {
           setUser(userData);
           setShowLoginModal(false); // Hide login modal if user is already logged in
           
-          // Load projects if user is superadmin
+          // Load projects and tasks if user is superadmin
           if (userData.isSuperadmin) {
             loadProjects();
+            loadTasks();
           }
         }
       } catch (e) {
@@ -48,6 +50,21 @@ export default function Home() {
       }
     } catch (e) {
       console.error('Failed to load projects:', e);
+    }
+  };
+
+  // Load tasks for superadmin users
+  const loadTasks = async () => {
+    try {
+      const response = await fetch('/api/tasks', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const tasksData = await response.json();
+        setTasks(tasksData);
+      }
+    } catch (e) {
+      console.error('Failed to load tasks:', e);
     }
   };
 
@@ -77,9 +94,10 @@ export default function Home() {
         setEmail('');
         setPassword('');
         
-        // Load projects if user is superadmin
+        // Load projects and tasks if user is superadmin
         if (userData.isSuperadmin) {
           loadProjects();
+          loadTasks();
         }
         
         alert(`Welcome back, ${userData.firstName}!`);
@@ -117,7 +135,7 @@ export default function Home() {
   return (
     <main style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <header style={{ borderBottom: '1px solid #e5e5e5', background: '#ffffff', paddingTop: 16, paddingBottom: 16 }}>
-        <div style={{ maxWidth: 1120, marginLeft: 'auto', marginRight: 'auto', paddingLeft: 16, paddingRight: 16 }}>
+        <div className="layout">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'space-between' }}>
             <h2 style={{ margin: 0, fontSize: 16, lineHeight: '24px', fontWeight: 400, color: '#171717' }}>
               <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>The Night Ventures</a>
@@ -154,32 +172,43 @@ export default function Home() {
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingTop: 40, position: 'relative' }}>
         {user ? (
           <>
-            {/* Projects Grid - Only for Superadmins - Full Width */}
+            {/* Projects Grid - Only for Superadmins */}
             {user.isSuperadmin && projects.length > 0 && (
               <div style={{
                 width: '100%',
                 background: 'white',
                 borderBottom: '1px solid #e5e5e5',
-                padding: '24px 0'
+                padding: '24px 0',
+                position: 'relative',
+                zIndex: 1
               }}>
-                <div style={{ maxWidth: 1120, marginLeft: 'auto', marginRight: 'auto', paddingLeft: 16, paddingRight: 16 }}>
+                <div className="layout">
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(5, 1fr)',
                     gap: 16,
-                    width: '100%'
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden'
                   }}>
                     {projects.map((project) => (
                       <div
                         key={project.id}
                         style={{
-                          background: '#f8f9fa',
+                          background: '#ffffff',
                           border: '1px solid #e5e5e5',
                           borderRadius: 8,
                           padding: 16,
                           textAlign: 'center',
                           transition: 'all 0.2s ease',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          aspectRatio: '1/0.64',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 12,
+                          boxSizing: 'border-box',
+                          minWidth: 0,
+                          width: '100%'
                         }}
                         onMouseEnter={(e) => {
                           e.target.style.transform = 'translateY(-2px)';
@@ -190,31 +219,32 @@ export default function Home() {
                           e.target.style.boxShadow = 'none';
                         }}
                       >
-                        {/* Project Logo */}
-                        <div style={{ marginBottom: 12, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Gray square container for logo */}
+                        <div style={{
+                          aspectRatio: '1/1',
+                          background: '#f8f9fa',
+                          borderRadius: 6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flex: '0 0 auto'
+                        }}>
                           {project.imageDataUrl ? (
                             <img
                               src={project.imageDataUrl}
                               alt={`${project.name} logo`}
                               style={{
-                                maxWidth: '100%',
-                                maxHeight: '60px',
+                                maxWidth: '80%',
+                                maxHeight: '80%',
                                 width: 'auto',
                                 height: 'auto',
-                                borderRadius: 6,
+                                borderRadius: 4,
                                 objectFit: 'contain'
                               }}
                             />
                           ) : (
                             <div style={{
-                              width: 48,
-                              height: 48,
-                              background: '#dee2e6',
-                              borderRadius: 6,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 18,
+                              fontSize: 24,
                               fontWeight: 600,
                               color: '#6c757d'
                             }}>
@@ -229,7 +259,8 @@ export default function Home() {
                           fontWeight: 500,
                           color: '#171717',
                           lineHeight: '1.3',
-                          textAlign: 'left'
+                          textAlign: 'left',
+                          flex: '0 0 auto'
                         }}>
                           {project.name}
                         </div>
@@ -240,27 +271,197 @@ export default function Home() {
               </div>
             )}
 
-            {/* User Details and Navigation Container */}
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              gap: 24,
-              width: '100%',
-              paddingLeft: 20,
-              paddingRight: 20,
-              paddingTop: user.isSuperadmin && projects.length > 0 ? 40 : 0
-            }}>
-              {/* User Details Window */}
-              <div style={{ 
-                background: 'white', 
-                border: '1px solid #e5e5e5', 
-                borderRadius: 12, 
-                padding: 32, 
+            {/* Task Board - Only for Superadmins */}
+            {user.isSuperadmin && (
+              <div style={{
                 width: '100%',
-                maxWidth: 500,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                background: 'white',
+                padding: '40px 0'
               }}>
+                <div className="layout">
+                  <h2 style={{ fontSize: 24, fontWeight: 500, margin: '0 0 32px 0', color: '#171717', textAlign: 'center' }}>
+                    Task Board
+                  </h2>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 24,
+                    maxWidth: '100%',
+                    overflow: 'hidden'
+                  }}>
+                    {/* Do Column */}
+                    <div style={{
+                      background: '#f8f9fa',
+                      border: '1px solid #e5e5e5',
+                      borderRadius: 8,
+                      padding: 20,
+                      minHeight: 400
+                    }}>
+                      <h3 style={{
+                        fontSize: 18,
+                        fontWeight: 500,
+                        margin: '0 0 20px 0',
+                        color: '#171717',
+                        textAlign: 'center',
+                        padding: '12px',
+                        background: '#fff3cd',
+                        borderRadius: 6,
+                        border: '1px solid #ffeaa7'
+                      }}>
+                        Do
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {tasks.filter(task => task.status === 'Do').map(task => (
+                          <div
+                            key={task.id}
+                            style={{
+                              background: 'white',
+                              border: '1px solid #e5e5e5',
+                              borderRadius: 6,
+                              padding: 12,
+                              fontSize: 13,
+                              color: '#171717',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                          >
+                            <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                              {task.title}
+                            </div>
+                            {task.projectName && (
+                              <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                {task.projectName}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Doing Column */}
+                    <div style={{
+                      background: '#f8f9fa',
+                      border: '1px solid #e5e5e5',
+                      borderRadius: 8,
+                      padding: 20,
+                      minHeight: 400
+                    }}>
+                      <h3 style={{
+                        fontSize: 18,
+                        fontWeight: 500,
+                        margin: '0 0 20px 0',
+                        color: '#171717',
+                        textAlign: 'center',
+                        padding: '12px',
+                        background: '#cce5ff',
+                        borderRadius: 6,
+                        border: '1px solid #74b9ff'
+                      }}>
+                        Doing
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {tasks.filter(task => task.status === 'Doing').map(task => (
+                          <div
+                            key={task.id}
+                            style={{
+                              background: 'white',
+                              border: '1px solid #e5e5e5',
+                              borderRadius: 6,
+                              padding: 12,
+                              fontSize: 13,
+                              color: '#171717',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                          >
+                            <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                              {task.title}
+                            </div>
+                            {task.projectName && (
+                              <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                {task.projectName}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Done Column */}
+                    <div style={{
+                      background: '#f8f9fa',
+                      border: '1px solid #e5e5e5',
+                      borderRadius: 8,
+                      padding: 20,
+                      minHeight: 400
+                    }}>
+                      <h3 style={{
+                        fontSize: 18,
+                        fontWeight: 500,
+                        margin: '0 0 20px 0',
+                        color: '#171717',
+                        textAlign: 'center',
+                        padding: '12px',
+                        background: '#d4edda',
+                        borderRadius: 6,
+                        border: '1px solid #00b894'
+                      }}>
+                        Done
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {tasks.filter(task => task.status === 'Done').map(task => (
+                          <div
+                            key={task.id}
+                            style={{
+                              background: 'white',
+                              border: '1px solid #e5e5e5',
+                              borderRadius: 6,
+                              padding: 12,
+                              fontSize: 13,
+                              color: '#171717',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}
+                          >
+                            <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                              {task.title}
+                            </div>
+                            {task.projectName && (
+                              <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                {task.projectName}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* User Details and Navigation Container - Hidden for Superadmins */}
+            {!user.isSuperadmin && (
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                gap: 24,
+                width: '100%',
+                paddingLeft: 20,
+                paddingRight: 20,
+                paddingTop: 40,
+                position: 'relative',
+                zIndex: 2
+              }}>
+                {/* User Details Window */}
+                <div style={{ 
+                  background: 'white', 
+                  border: '1px solid #e5e5e5', 
+                  borderRadius: 12, 
+                  padding: 32, 
+                  width: '100%',
+                  maxWidth: 500,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }}>
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
                   <h2 style={{ fontSize: 24, fontWeight: 500, margin: '0 0 8px 0', color: '#171717' }}>
                     Welcome back!
@@ -375,7 +576,8 @@ export default function Home() {
                   })}
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </>
         ) : (
           // Empty state when not logged in
