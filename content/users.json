@@ -76,7 +76,7 @@
     "firstName": "Dori",
     "lastName": "Fussmann",
     "email": "dori@thenightventures.com",
-    "password": "$2b$10$2SSJH3blyMoMe.V4Pi9jquVHvxEFbAHRk6LtdEo5hL.tW4WC7lECu",
+    "password": "$2b$10$iPkYZ/g6NffP.5kCo3T3b.yiei2G9IYtycGwwmo7DoisNMEO9KTGG",
     "project": "p_kjdptfhl",
     "projectName": "The Night Ventures",
     "pageAccess": {
@@ -90,21 +90,21 @@
     "updatedAt": "2025-09-17T23:37:51.461Z"
   },
   {
-    "id": "5e7a3184-a383-4ab8-8dcc-63d194cd59b1",
+    "id": "512cfbcf-cc2b-4281-95cd-10b0ba741799",
     "firstName": "Test",
-    "lastName": "Adding",
-    "email": "add@gmail.com",
-    "password": "$2b$10$/UwrTVt4jBzf/Os9DQFqiOfUyxTgxvb7SYF8mn.EX8ER7/oNJlt/.",
-    "project": "p_36gnij72",
-    "projectName": "Swift Vets",
+    "lastName": "Tester",
+    "email": "tester@gmail.com",
+    "password": "Hello214!",
+    "project": "p_0hevk5lw",
+    "projectName": "Pluto Vets",
     "pageAccess": {
-      "home": false,
+      "home": true,
       "bva": true,
       "csm": true,
       "admin": false
     },
     "isSuperadmin": false,
-    "createdAt": "2025-09-18T16:02:46.163Z",
-    "updatedAt": "2025-09-18T17:17:40.850Z"
+    "createdAt": "2025-09-18T19:13:27.374Z",
+    "updatedAt": "2025-09-18T19:13:27.374Z"
   }
 ]
