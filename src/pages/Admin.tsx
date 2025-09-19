@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import withPageAccess from '../lib/withPageAccess'
 
 function AdminPage() {
+  const [user, setUser] = useState(null)
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
@@ -42,6 +43,26 @@ function AdminPage() {
   const [editingUser, setEditingUser] = useState(null)
   const [editingProject, setEditingProject] = useState(null)
   const [editingTask, setEditingTask] = useState(null)
+  const [editingUpdatesMode, setEditingUpdatesMode] = useState(false)
+  const [selectedUpdates, setSelectedUpdates] = useState(new Set())
+
+  // File upload utility
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+    
+    return response.json();
+  };
 
   // API helper function
   const apiCall = async (url, options = {}) => {
@@ -60,9 +81,24 @@ function AdminPage() {
     return response.json();
   };
 
+  const loadUser = async () => {
+    try {
+      const response = await fetch('/api/auth/me', { credentials: 'include' })
+      if (response.ok) {
+        const userData = await response.json()
+        setUser(userData)
+      }
+    } catch (error) {
+      console.error('Failed to load user:', error)
+    }
+  }
+
   // Load users and projects from server on component mount
   useEffect(() => {
     const loadData = async () => {
+      // Load current user first
+      await loadUser()
+      
       try {
         // Load users
         const serverUsers = await apiCall('/api/users');
@@ -307,6 +343,66 @@ function AdminPage() {
     }
   }
 
+  // Parse updates string into individual entries
+  const parseUpdates = (updatesString) => {
+    if (!updatesString) return [];
+    return updatesString.split('\n').filter(line => line.trim().length > 0);
+  };
+
+  // Convert updates array back to string
+  const stringifyUpdates = (updatesArray) => {
+    return updatesArray.join('\n');
+  };
+
+  // Toggle updates editing mode
+  const toggleUpdatesEditMode = () => {
+    setEditingUpdatesMode(!editingUpdatesMode);
+    setSelectedUpdates(new Set());
+  };
+
+  // Toggle update selection
+  const toggleUpdateSelection = (index) => {
+    const newSelected = new Set(selectedUpdates);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedUpdates(newSelected);
+  };
+
+  // Select all updates
+  const selectAllUpdates = () => {
+    const updates = parseUpdates(editingProject.updates || '');
+    const allIndices = new Set(updates.map((_, index) => index));
+    setSelectedUpdates(allIndices);
+  };
+
+  // Deselect all updates
+  const deselectAllUpdates = () => {
+    setSelectedUpdates(new Set());
+  };
+
+  // Delete selected updates
+  const deleteSelectedUpdates = () => {
+    if (!editingProject || selectedUpdates.size === 0) return;
+    
+    const updates = parseUpdates(editingProject.updates);
+    const sortedIndices = Array.from(selectedUpdates).sort((a, b) => b - a); // Sort in descending order
+    
+    // Remove updates from highest index to lowest to maintain correct indices
+    sortedIndices.forEach(index => {
+      updates.splice(index, 1);
+    });
+    
+    setEditingProject(prev => ({
+      ...prev,
+      updates: stringifyUpdates(updates)
+    }));
+    
+    setSelectedUpdates(new Set());
+  };
+
   // Handle saving project edits
   const handleSaveProject = async (e) => {
     e.preventDefault()
@@ -321,7 +417,17 @@ function AdminPage() {
       const individuals = formData.get('individuals')
       const monthlyImpact = formData.get('monthlyImpact')
       const hoursPerMonth = formData.get('hoursPerMonth')
-      const logoFile = formData.get('logo')
+      const updates = formData.get('updates')
+      let imageDataUrl = editingProject.imageDataUrl // Default to existing image
+      let logoName = editingProject.logo // Default to existing logo name
+
+      // Process new logo file if uploaded
+      if (editingProject._tempFile) {
+        // Upload file to server
+        const uploadResult = await uploadFile(editingProject._tempFile);
+        imageDataUrl = uploadResult.url; // This will be something like "/uploads/filename.jpg"
+        logoName = uploadResult.originalName;
+      }
       
       const updatedProjectData = {
         name,
@@ -332,8 +438,9 @@ function AdminPage() {
         individuals: individuals ? individuals.split(',').map(i => i.trim()).filter(i => i) : [],
         monthlyImpact: monthlyImpact ? parseFloat(monthlyImpact) : 0,
         hoursPerMonth: hoursPerMonth ? parseFloat(hoursPerMonth) : 0,
-        logo: logoFile && logoFile.size > 0 ? logoFile.name : editingProject.logo,
-        imageDataUrl: editingProject.imageDataUrl // Preserve existing image data
+        updates: updates || '',
+        logo: logoName,
+        imageDataUrl: imageDataUrl
       }
 
       // Save to server
@@ -413,9 +520,26 @@ function AdminPage() {
       <header style={{ borderBottom: '1px solid #e5e5e5', background: '#ffffff', paddingTop: 16, paddingBottom: 16 }}>
         <div className="layout">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0, fontSize: 16, lineHeight: '24px', fontWeight: 400, color: '#171717' }}>
-              <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>The Night Ventures</Link>
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', height: '24px' }}>
+              <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                {user && user.projectLogo ? (
+                  <img 
+                    src={user.projectLogo} 
+                    alt={user.projectName || 'Project Logo'} 
+                    style={{ 
+                      height: '24px', 
+                      width: 'auto', 
+                      maxWidth: '120px',
+                      objectFit: 'contain'
+                    }} 
+                  />
+                ) : (
+                  <span style={{ fontSize: 16, lineHeight: '24px', fontWeight: 400, color: '#171717' }}>
+                    The Night Ventures
+                  </span>
+                )}
+              </Link>
+            </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <Link className="btn btn-sm" to="/admin">Admin</Link>
               <Link className="btn btn-sm" to="/">Login</Link>
@@ -433,19 +557,19 @@ function AdminPage() {
               Add User
             </button>
             
-            <button 
-              className="btn btn-sm"
-              onClick={() => setShowAddProjectModal(true)}
-            >
-              Add Project
-            </button>
+                <button 
+                  className="btn btn-sm"
+                  onClick={() => setShowAddProjectModal(true)}
+                >
+                  Add Project
+                </button>
 
             <button 
               className="btn btn-sm"
               onClick={() => setShowAddTaskModal(true)}
             >
               Add Task
-            </button>
+                </button>
           </div>
 
           {/* Users Grid - Collapsible */}
@@ -463,17 +587,17 @@ function AdminPage() {
                 paddingRight: '40px',
                 color: '#171717'
               }}>
-                Users
+                  Users
               </summary>
               <div className="collapsible-body" style={{ padding: 20 }}>
-                {users.length === 0 ? (
+                  {users.length === 0 ? (
                   <div style={{ 
                     padding: 32, 
                     textAlign: 'center', 
                     color: '#6c757d', 
                     fontSize: 13 
                   }}>
-                    No users found
+                        No users found
                   </div>
                 ) : (
                   <div style={{
@@ -486,7 +610,7 @@ function AdminPage() {
                       <div
                         key={user.id}
                         onClick={() => setEditingUser(user)}
-                        style={{
+                        style={{ 
                           background: 'white',
                           border: '1px solid #e5e5e5',
                           borderRadius: 6,
@@ -513,11 +637,11 @@ function AdminPage() {
                         }}
                       >
                         {user.firstName} {user.lastName}
-                      </div>
+                          </div>
                     ))}
                   </div>
-                )}
-              </div>
+                  )}
+            </div>
             </details>
           </div>
 
@@ -536,17 +660,17 @@ function AdminPage() {
                 paddingRight: '40px',
                 color: '#171717'
               }}>
-                Projects
+              Projects
               </summary>
               <div className="collapsible-body" style={{ padding: 20 }}>
-                {projects.length === 0 ? (
+                  {projects.length === 0 ? (
                   <div style={{ 
                     padding: 32, 
                     textAlign: 'center', 
                     color: '#6c757d', 
                     fontSize: 13 
                   }}>
-                    No projects found
+                        No projects found
                   </div>
                 ) : (
                   <div style={{
@@ -559,7 +683,7 @@ function AdminPage() {
                       <div
                         key={project.id}
                         onClick={() => setEditingProject(project)}
-                        style={{
+                        style={{ 
                           background: 'white',
                           border: '1px solid #e5e5e5',
                           borderRadius: 6,
@@ -585,7 +709,7 @@ function AdminPage() {
                           e.target.style.boxShadow = 'none';
                         }}
                       >
-                        {project.name}
+                          {project.name}
                       </div>
                     ))}
                   </div>
@@ -632,7 +756,7 @@ function AdminPage() {
                       <div
                         key={task.id}
                         onClick={() => setEditingTask(task)}
-                        style={{
+                            style={{ 
                           background: 'white',
                           border: '1px solid #e5e5e5',
                           borderRadius: 6,
@@ -677,9 +801,9 @@ function AdminPage() {
                             background: task.status === 'Done' ? '#d4edda' : task.status === 'Doing' ? '#fff3cd' : '#f8d7da',
                             color: task.status === 'Done' ? '#155724' : task.status === 'Doing' ? '#856404' : '#721c24',
                             padding: '2px 6px',
-                            borderRadius: 12,
-                            fontSize: 11,
-                            fontWeight: 500
+                              borderRadius: 12, 
+                              fontSize: 11,
+                              fontWeight: 500
                           }}>
                             {task.status}
                           </span>
@@ -697,7 +821,7 @@ function AdminPage() {
                     ))}
                   </div>
                 )}
-              </div>
+            </div>
             </details>
           </div>
         </div>
@@ -1355,8 +1479,114 @@ function AdminPage() {
                 overflow: 'auto',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Edit Project</h3>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                    {/* Logo Upload Area - Top Right */}
+                    <div 
+                      style={{ 
+                        position: 'relative',
+                        width: 80,
+                        height: 80,
+                        border: '2px dashed #ddd',
+                        borderRadius: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        background: editingProject.imageDataUrl ? 'transparent' : '#f8f9fa',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => document.getElementById('logo-upload-input').click()}
+                      onMouseEnter={(e) => {
+                        if (editingProject.imageDataUrl) {
+                          e.target.style.opacity = '0.8';
+                          const overlay = e.target.querySelector('.logo-overlay');
+                          if (overlay) overlay.style.opacity = '1';
+                        } else {
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.background = '#f0f8ff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (editingProject.imageDataUrl) {
+                          e.target.style.opacity = '1';
+                          const overlay = e.target.querySelector('.logo-overlay');
+                          if (overlay) overlay.style.opacity = '0';
+                        } else {
+                          e.target.style.borderColor = '#ddd';
+                          e.target.style.background = '#f8f9fa';
+                        }
+                      }}
+                    >
+                      {editingProject.imageDataUrl ? (
+                        <>
+                          <img 
+                            src={editingProject.imageDataUrl} 
+                            alt="Project logo" 
+                            style={{ 
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              borderRadius: 6
+                            }} 
+                          />
+                          <div 
+                            className="logo-overlay"
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              background: 'rgba(0, 0, 0, 0.7)',
+                              borderRadius: 6,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              opacity: 0,
+                              transition: 'opacity 0.2s ease',
+                              color: 'white',
+                              fontSize: 11,
+                              fontWeight: 500,
+                              textAlign: 'center',
+                              padding: 4
+                            }}
+                          >
+                            Click to replace
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{
+                          textAlign: 'center',
+                          color: '#666',
+                          fontSize: 11,
+                          fontWeight: 500,
+                          lineHeight: 1.2
+                        }}>
+                          Click to upload logo
+                        </div>
+                      )}
+                      <input
+                        id="logo-upload-input"
+                        type="file"
+                        name="logo"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            // Create a temporary preview URL for immediate display
+                            const previewUrl = URL.createObjectURL(file);
+                            setEditingProject(prev => ({
+                              ...prev,
+                              imageDataUrl: previewUrl,
+                              _tempFile: file // Store file for later upload
+                            }));
+                          }
+                        }}
+                      />
+                    </div>
                   <button 
                     onClick={() => setEditingProject(null)}
                     style={{ 
@@ -1370,31 +1600,32 @@ function AdminPage() {
                   >
                     ×
                   </button>
+                  </div>
                 </div>
 
                 <form onSubmit={handleSaveProject}>
                   {/* Row 1: Name, Description, Status */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
-                    {/* Project Name */}
+                  {/* Project Name */}
                     <div>
-                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        defaultValue={editingProject.name}
-                        style={{ 
-                          width: '100%', 
-                          padding: 12, 
-                          border: '1px solid #ddd', 
-                          borderRadius: 6,
-                          fontSize: 13,
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      defaultValue={editingProject.name}
+                      style={{ 
+                        width: '100%', 
+                        padding: 12, 
+                        border: '1px solid #ddd', 
+                        borderRadius: 6,
+                        fontSize: 13,
                           boxSizing: 'border-box',
                           height: '44px'
-                        }}
-                      />
-                    </div>
+                      }}
+                    />
+                  </div>
 
                     {/* Description */}
                     <div>
@@ -1416,35 +1647,35 @@ function AdminPage() {
                           height: '44px'
                         }}
                         placeholder="Enter project description"
-                      />
-                    </div>
+                    />
+                  </div>
 
-                    {/* Status Dropdown */}
+                  {/* Status Dropdown */}
                     <div>
-                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
-                        Status
-                      </label>
-                      <select
-                        name="status"
-                        defaultValue={editingProject.status}
-                        style={{ 
-                          width: '100%', 
-                          padding: 12, 
-                          border: '1px solid #ddd', 
-                          borderRadius: 6,
-                          fontSize: 13,
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      defaultValue={editingProject.status}
+                      style={{ 
+                        width: '100%', 
+                        padding: 12, 
+                        border: '1px solid #ddd', 
+                        borderRadius: 6,
+                        fontSize: 13,
                           boxSizing: 'border-box',
                           height: '44px'
-                        }}
-                      >
-                        <option value="">Select status...</option>
-                        <option value="Pipeline">Pipeline</option>
-                        <option value="Active">Active</option>
+                      }}
+                    >
+                      <option value="">Select status...</option>
+                      <option value="Pipeline">Pipeline</option>
+                      <option value="Active">Active</option>
                         <option value="Live">Live</option>
                         <option value="Potential">Potential</option>
                         <option value="Lost">Lost</option>
                         <option value="Archived">Archived</option>
-                      </select>
+                    </select>
                     </div>
                   </div>
 
@@ -1452,25 +1683,25 @@ function AdminPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
                     {/* Source */}
                     <div>
-                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
                         Source
-                      </label>
-                      <input
+                    </label>
+                    <input
                         type="text"
                         name="source"
                         defaultValue={editingProject.source || ''}
-                        style={{ 
-                          width: '100%', 
-                          padding: 12, 
-                          border: '1px solid #ddd', 
-                          borderRadius: 6,
-                          fontSize: 13,
+                      style={{ 
+                        width: '100%', 
+                        padding: 12, 
+                        border: '1px solid #ddd', 
+                        borderRadius: 6,
+                        fontSize: 13,
                           boxSizing: 'border-box',
                           height: '44px'
-                        }}
+                      }}
                         placeholder="e.g., EarlyStageLabs"
-                      />
-                    </div>
+                    />
+                      </div>
 
                     {/* Type */}
                     <div>
@@ -1517,8 +1748,8 @@ function AdminPage() {
                     </div>
                   </div>
 
-                  {/* Row 3: Monthly Impact, Hours Per Month, Upload Logo */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  {/* Row 3: Monthly Impact, Hours Per Month */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                     {/* Monthly Impact */}
                     <div>
                       <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
@@ -1562,43 +1793,162 @@ function AdminPage() {
                         placeholder="20"
                       />
                     </div>
+                  </div>
 
-                    {/* Upload Logo */}
+                  {/* Row 4: Updates (full width) */}
+                  <div style={{ marginBottom: 16 }}>
                     <div>
-                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#333' }}>
-                        Upload Logo
-                      </label>
-                      <input
-                        type="file"
-                        name="logo"
-                        accept="image/*"
-                        style={{ 
-                          width: '100%', 
-                          padding: 12, 
-                          border: '1px solid #ddd', 
-                          borderRadius: 6,
-                          fontSize: 13,
-                          boxSizing: 'border-box',
-                          height: '44px'
-                        }}
-                      />
-                      {editingProject.imageDataUrl && (
-                        <div style={{ marginTop: 8 }}>
-                          <img 
-                            src={editingProject.imageDataUrl} 
-                            alt="Current logo" 
-                            style={{ 
-                              maxWidth: '80px', 
-                              maxHeight: '80px', 
-                              borderRadius: 4,
-                              border: '1px solid #ddd'
-                            }} 
-                          />
-                          <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>
-                            Current logo
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 500, color: '#333' }}>
+                          Updates
+                        </label>
+                        <button
+                          type="button"
+                          onClick={toggleUpdatesEditMode}
+                          style={{
+                            background: editingUpdatesMode ? '#6c757d' : '#007bff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 4,
+                            padding: '4px 8px',
+                            fontSize: 11,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {editingUpdatesMode ? 'Done' : 'Edit'}
+                        </button>
+                      </div>
+                      
+                      {/* Bulk Actions (shown when in edit mode) */}
+                      {editingUpdatesMode && parseUpdates(editingProject.updates || '').length > 0 && (
+                        <div style={{ 
+                          display: 'flex', 
+                          gap: 8, 
+                          marginBottom: 8, 
+                          padding: 8, 
+                          background: '#e9ecef', 
+                          borderRadius: 4,
+                          alignItems: 'center'
+                        }}>
+                          <button
+                            type="button"
+                            onClick={selectAllUpdates}
+                            style={{
+                              background: 'transparent',
+                              color: '#007bff',
+                              border: 'none',
+                              fontSize: 11,
+                              cursor: 'pointer',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={deselectAllUpdates}
+                            style={{
+                              background: 'transparent',
+                              color: '#007bff',
+                              border: 'none',
+                              fontSize: 11,
+                              cursor: 'pointer',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            Deselect All
+                          </button>
+                          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 11, color: '#666' }}>
+                              {selectedUpdates.size} selected
+                            </span>
+                            {selectedUpdates.size > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to delete ${selectedUpdates.size} update(s)?`)) {
+                                    deleteSelectedUpdates();
+                                  }
+                                }}
+                                style={{
+                                  background: '#dc3545',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: 4,
+                                  padding: '4px 8px',
+                                  fontSize: 11,
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Delete Selected
+                              </button>
+                            )}
                           </div>
                         </div>
                       )}
+                      
+                      {/* Updates List */}
+                      <div style={{ 
+                        border: '1px solid #ddd', 
+                        borderRadius: 6, 
+                        maxHeight: '300px', 
+                        overflowY: 'auto',
+                        background: '#f8f9fa'
+                      }}>
+                        {parseUpdates(editingProject.updates || '').length > 0 ? (
+                          parseUpdates(editingProject.updates || '').map((update, index) => (
+                            <div key={index} style={{
+                              padding: 12,
+                              borderBottom: index < parseUpdates(editingProject.updates || '').length - 1 ? '1px solid #e5e5e5' : 'none',
+                              background: selectedUpdates.has(index) ? '#e3f2fd' : 'white',
+                              margin: '8px',
+                              borderRadius: 4,
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: 12
+                            }}>
+                              {/* Checkbox (shown in edit mode) */}
+                              {editingUpdatesMode && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedUpdates.has(index)}
+                                  onChange={() => toggleUpdateSelection(index)}
+                                  style={{
+                                    marginTop: 2,
+                                    cursor: 'pointer'
+                                  }}
+                                />
+                              )}
+                              
+                              {/* Update Content */}
+                              <div style={{ 
+                                flex: 1, 
+                                fontSize: 13, 
+                                lineHeight: 1.4,
+                                whiteSpace: 'pre-wrap'
+                              }}>
+                                {update}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div style={{ 
+                            padding: 20, 
+                            textAlign: 'center', 
+                            color: '#666', 
+                            fontSize: 13 
+                          }}>
+                            No updates yet
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Hidden input to maintain form compatibility */}
+                      <input
+                        type="hidden"
+                        name="updates"
+                        value={editingProject.updates || ''}
+                      />
                     </div>
                   </div>
 

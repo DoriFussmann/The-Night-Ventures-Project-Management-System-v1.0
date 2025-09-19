@@ -47,6 +47,7 @@ function parseCSV(text: string) {
 }
 
 function BvaPage() {
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<{ headers: string[]; rows: Row[] } | null>(null)
@@ -54,6 +55,22 @@ function BvaPage() {
   const [selectedCompany, setSelectedCompany] = useState('')
 
   const url = import.meta.env.VITE_SHEET_CSV_URL as string | undefined
+
+  const loadUser = async () => {
+    try {
+      const response = await fetch('/api/auth/me', { credentials: 'include' })
+      if (response.ok) {
+        const userData = await response.json()
+        setUser(userData)
+      }
+    } catch (error) {
+      console.error('Failed to load user:', error)
+    }
+  }
+
+  useEffect(() => {
+    loadUser()
+  }, [])
 
   useEffect(() => {
     async function run() {
@@ -213,7 +230,26 @@ function BvaPage() {
       <header style={{ borderBottom: '1px solid #e5e5e5', background: '#ffffff' }}>
         <div className="layout" style={{ paddingTop: 16, paddingBottom: 16 }}>
           <nav aria-label="Primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1 style={{ margin: 0 }}><a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>The Night Ventures</a></h1>
+            <div style={{ display: 'flex', alignItems: 'center', height: '24px' }}>
+              <a href="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                {user && user.projectLogo ? (
+                  <img 
+                    src={user.projectLogo} 
+                    alt={user.projectName || 'Project Logo'} 
+                    style={{ 
+                      height: '24px', 
+                      width: 'auto', 
+                      maxWidth: '120px',
+                      objectFit: 'contain'
+                    }} 
+                  />
+                ) : (
+                  <span style={{ fontSize: 16, lineHeight: '24px', fontWeight: 400, color: '#171717' }}>
+                    The Night Ventures
+                  </span>
+                )}
+              </a>
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <a className="btn btn-sm" href="/bva">BvA Test</a>
               <a className="btn btn-sm" href="/probability-map.html">Probability Map</a>

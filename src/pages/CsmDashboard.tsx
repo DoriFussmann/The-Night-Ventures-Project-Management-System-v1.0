@@ -247,58 +247,34 @@ function CsmDashboardPage() {
       <header style={{ borderBottom: '1px solid #e5e5e5', background: '#ffffff' }}>
         <div className="layout" style={{ paddingTop: 16, paddingBottom: 16 }}>
           <nav aria-label="Primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1 style={{ margin: 0 }}><a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>The Night Ventures</a></h1>
+            <div style={{ display: 'flex', alignItems: 'center', height: '24px' }}>
+              <a href="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                {user && user.projectLogo ? (
+                  <img 
+                    src={user.projectLogo} 
+                    alt={user.projectName || 'Project Logo'} 
+                    style={{ 
+                      height: '24px', 
+                      width: 'auto', 
+                      maxWidth: '120px',
+                      objectFit: 'contain'
+                    }} 
+                  />
+                ) : (
+                  <span style={{ fontSize: 16, lineHeight: '24px', fontWeight: 400, color: '#171717' }}>
+                    The Night Ventures
+                  </span>
+                )}
+              </a>
+            </div>
           </nav>
         </div>
       </header>
       <main className="layout" style={{ paddingTop: 24, paddingBottom: 24, fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, minHeight: 40 }}>
+        <div style={{ marginBottom: 16 }}>
           <h2 style={{ fontSize: 20, lineHeight: '28px', margin: 0 }}>
             {user ? `Hello, ${user.firstName} ${user.lastName}` : 'CSM Dashboard'}
           </h2>
-          {user && user.projectName && user.projectName !== 'No project assigned' && (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              minWidth: 90,
-              minHeight: 72,
-              padding: 12
-            }}>
-              {user.projectLogo ? (
-                <img 
-                  src={user.projectLogo} 
-                  alt={`${user.projectName} logo`}
-                  style={{
-                    maxWidth: 72,
-                    maxHeight: 60,
-                    width: 'auto',
-                    height: 'auto',
-                    borderRadius: 8,
-                    objectFit: 'contain',
-                    display: 'block',
-                    flexShrink: 0
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: 60,
-                  height: 60,
-                  background: '#f8f9fa',
-                  borderRadius: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 24,
-                  fontWeight: 600,
-                  color: '#666',
-                  flexShrink: 0
-                }}>
-                  {user.projectName.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-          )}
         </div>
         
         {/* Search Box and Month Selector */}

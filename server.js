@@ -8,6 +8,7 @@ const { randomUUID: nodeRandomUUID } = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
 const prisma = require('./lib/prisma');
 
 const app = express();
@@ -45,6 +46,38 @@ async function ensureCollection(slug, label, schema) {
     throw error;
   }
 }
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, 'public', 'uploads');
+    // Ensure uploads directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with original extension
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -593,6 +626,99 @@ app.delete('/api/collections/:slug/items/:id', requireAuth, requireSuperadmin, r
   } catch (e) {
     console.error('Error deleting collection item:', e);
     res.status(500).json({ error: e.message });
+  }
+});
+
+// OpenAI status generation endpoint
+app.post('/api/generate-status', requireAuth, requireSuperadmin, async (req, res) => {
+  try {
+    const { projectData } = req.body;
+    
+    if (!projectData) {
+      return res.status(400).json({ error: 'Project data is required' });
+    }
+
+    // Prepare the prompt for OpenAI
+    const prompt = `
+Analyze the following project data and provide a comprehensive status summary:
+
+Project Name: ${projectData.name}
+Description: ${projectData.description}
+Current Status: ${projectData.status}
+Recent Updates: ${projectData.updates}
+
+Tasks:
+- To Do: ${projectData.tasks.todo.join(', ') || 'None'}
+- In Progress: ${projectData.tasks.doing.join(', ') || 'None'}
+- Completed: ${projectData.tasks.done.join(', ') || 'None'}
+
+Please provide a concise status summary that includes:
+1. Current project situation
+2. What's being worked on now
+3. Next steps and priorities
+4. Any potential issues or blockers
+5. Overall progress assessment
+
+Keep the response professional and actionable, around 200-300 words.
+`;
+
+    // Make OpenAI API call
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a project management assistant that provides clear, actionable status summaries.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      })
+    });
+
+    if (!openaiResponse.ok) {
+      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
+    }
+
+    const openaiResult = await openaiResponse.json();
+    const summary = openaiResult.choices[0].message.content;
+
+    res.json({ summary });
+  } catch (error) {
+    console.error('Error generating status:', error);
+    res.status(500).json({ error: 'Failed to generate status summary' });
+  }
+});
+
+// File upload endpoint
+app.post('/api/upload', requireAuth, requireAdminWrites, upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    // Return the file URL
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ 
+      success: true, 
+      url: fileUrl,
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      size: req.file.size
+    });
+  } catch (error) {
+    console.error('File upload error:', error);
+    res.status(500).json({ error: 'File upload failed' });
   }
 });
 

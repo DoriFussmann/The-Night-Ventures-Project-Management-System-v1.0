@@ -1,0 +1,38 @@
+[
+  {
+    "id": "25e14fce-f5c5-483a-a9da-8c91a64be6a0",
+    "projectData": {
+      "name": "BlueMark",
+      "description": "BlueMark is a leading provider of independent impact verification and intelligence for the sustainable investing market. The firm works with asset managers, allocators, and enterprises to evaluate the credibility of their impact practices and performance, helping bring transparency and accountability to a fast-growing industry. Its verification services benchmark clients against global standards while its market intelligence products provide actionable insights into best practices, trends, and investor behavior.\n\nSince its founding, BlueMark has become a recognized authority in impact investing, conducting hundreds of verifications across billions of dollars in assets. The company’s position at the intersection of finance and sustainability allows it to serve both as a trusted third-party assessor and as a data provider shaping how impact performance is measured, reported, and improved worldwide.\n\n**Recent Events (3 sentences)**\nAt the July 2025 board meeting, BlueMark approved a revised 2H2025 budget in response to market slowdown, with leaner expense structures and sharper focus on profitability. The company executed a RIF and other cost-cutting measures to extend runway, while prioritizing break-even in the Verification business by early 2026. August results reflected these adjustments, showing the first month of operating under the new budget framework.\n",
+      "status": "Live",
+      "updates": "2025-09-19: Sent the July August 2025 update deck to Christina (CEO) so she can send to investors.",
+      "tasks": {
+        "todo": [
+          "2 Month Summary"
+        ],
+        "doing": [],
+        "done": []
+      }
+    },
+    "createdAt": "2025-09-19T21:20:57.460Z",
+    "updatedAt": "2025-09-19T21:20:57.460Z"
+  },
+  {
+    "id": "dcc7e904-6a5b-4f7e-aff5-08d3ef0d88d3",
+    "projectData": {
+      "name": "BlueMark",
+      "description": "BlueMark is a leading provider of independent impact verification and intelligence for the sustainable investing market. The firm works with asset managers, allocators, and enterprises to evaluate the credibility of their impact practices and performance, helping bring transparency and accountability to a fast-growing industry. Its verification services benchmark clients against global standards while its market intelligence products provide actionable insights into best practices, trends, and investor behavior.\n\nSince its founding, BlueMark has become a recognized authority in impact investing, conducting hundreds of verifications across billions of dollars in assets. The company’s position at the intersection of finance and sustainability allows it to serve both as a trusted third-party assessor and as a data provider shaping how impact performance is measured, reported, and improved worldwide.\n\n**Recent Events (3 sentences)**\nAt the July 2025 board meeting, BlueMark approved a revised 2H2025 budget in response to market slowdown, with leaner expense structures and sharper focus on profitability. The company executed a RIF and other cost-cutting measures to extend runway, while prioritizing break-even in the Verification business by early 2026. August results reflected these adjustments, showing the first month of operating under the new budget framework.\n",
+      "status": "Live",
+      "updates": "2025-09-19: Sent the July August 2025 update deck to Christina (CEO) so she can send to investors.",
+      "tasks": {
+        "todo": [
+          "2 Month Summary"
+        ],
+        "doing": [],
+        "done": []
+      }
+    },
+    "createdAt": "2025-09-19T21:21:01.420Z",
+    "updatedAt": "2025-09-19T21:21:01.420Z"
+  }
+]

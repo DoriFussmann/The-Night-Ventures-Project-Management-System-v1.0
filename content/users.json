@@ -1,23 +1,5 @@
 [
   {
-    "id": "c37cb6b8-04cc-4efb-bd77-7281cedc84aa",
-    "firstName": "Mushon",
-    "lastName": "Ezra",
-    "email": "dori@gmail.com",
-    "password": "$2b$10$j9X7IBmi3cWmQesddRh2t.TY9Bz96qI5A9Vt5ErSyx4CXNMGx8.tC",
-    "project": "p_de68v8nb",
-    "projectName": "Sniffi",
-    "pageAccess": {
-      "home": false,
-      "bva": true,
-      "csm": true,
-      "admin": false
-    },
-    "isSuperadmin": false,
-    "createdAt": "2025-09-17T21:19:41.929Z",
-    "updatedAt": "2025-09-17T23:35:34.566Z"
-  },
-  {
     "id": "e2ad4d01-028c-43da-889c-4919ba7eab5d",
     "firstName": "Arden",
     "lastName": "Veyra",
@@ -88,23 +70,5 @@
     "isSuperadmin": true,
     "createdAt": "2025-09-17T23:36:44.309Z",
     "updatedAt": "2025-09-17T23:37:51.461Z"
-  },
-  {
-    "id": "512cfbcf-cc2b-4281-95cd-10b0ba741799",
-    "firstName": "Test",
-    "lastName": "Tester",
-    "email": "tester@gmail.com",
-    "password": "$2b$10$UB8ZcdYWqt/zwvrq0pP00u5GTY33h/gzEtITQFHV/ORYJktb/GF6q",
-    "project": "p_0hevk5lw",
-    "projectName": "Pluto Vets",
-    "pageAccess": {
-      "home": true,
-      "bva": true,
-      "csm": true,
-      "admin": false
-    },
-    "isSuperadmin": false,
-    "createdAt": "2025-09-18T19:13:27.374Z",
-    "updatedAt": "2025-09-19T07:27:57.042Z"
   }
 ]

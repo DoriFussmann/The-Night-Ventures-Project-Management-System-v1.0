@@ -8,6 +8,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Environment files
+.env
+.env.local
+.env.*.local
+
 # Ignore temp files only, keep content JSONs
 content/*.tmp-*
 
