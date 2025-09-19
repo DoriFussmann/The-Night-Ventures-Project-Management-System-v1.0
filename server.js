@@ -776,8 +776,11 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         });
         if (userProject) {
           projectName = userProject.title;
-          projectLogo = null; // TODO: Add logo support to Project model in future step
+          // Extract logo from notes field if it exists
+          const notes = typeof userProject.notes === 'string' ? JSON.parse(userProject.notes || '{}') : userProject.notes || {};
+          projectLogo = notes.imageDataUrl || null;
           console.log(`[DEBUG LOGIN] Found project: ${projectName}, has logo: ${!!projectLogo}`);
+          console.log(`[DEBUG LOGIN] Logo value: ${projectLogo}`);
         }
       } catch (e) {
         console.error('Error loading project for user:', e);
@@ -840,8 +843,11 @@ app.get('/api/auth/me', verifyToken, async (req, res) => {
         });
         if (userProject) {
           projectName = userProject.title;
-          projectLogo = null; // TODO: Add logo support to Project model in future step
+          // Extract logo from notes field if it exists
+          const notes = typeof userProject.notes === 'string' ? JSON.parse(userProject.notes || '{}') : userProject.notes || {};
+          projectLogo = notes.imageDataUrl || null;
           console.log(`[DEBUG ME] Found project: ${projectName}, has logo: ${!!projectLogo}`);
+          console.log(`[DEBUG ME] Logo value: ${projectLogo}`);
         }
       } catch (e) {
         console.error('Error loading project for user:', e);

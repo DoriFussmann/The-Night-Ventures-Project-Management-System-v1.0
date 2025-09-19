@@ -9,7 +9,7 @@ function CsmDashboardPage() {
   const [filteredClinics, setFilteredClinics] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedClinic, setSelectedClinic] = useState(null)
-  const [selectedMonth, setSelectedMonth] = useState('Jan-25')
+  const [selectedMonth, setSelectedMonth] = useState('Sep-25')
   const [monthOptions, setMonthOptions] = useState([])
 
   // Check if user is logged in on component mount
@@ -80,6 +80,10 @@ function CsmDashboardPage() {
         const averagePlansIndex = 3; // Column D (0-based index)
         const firstPlanDateIndex = 4; // Column E (0-based index)
         const snoutActIndex = 5; // Column F (0-based index)
+        const successIndex = 6; // Column G (0-based index)
+        const overdueIndex = 7; // Column H (0-based index)
+        const cancelledIndex = 8; // Column I (0-based index)
+        const daysSinceLastPlanIndex = 9; // Column J (0-based index)
         
         // Extract month options from L1:W1 (columns 11-22, 0-indexed)
         const months = headers.slice(11, 23).filter(month => month && month.trim());
@@ -109,6 +113,10 @@ function CsmDashboardPage() {
               averagePlansPerMonth: parseFloat(row[averagePlansIndex]) || 0,
               firstPlanSoldDate: firstPlanDate,
               snoutAct: parseFloat(row[snoutActIndex]) || 0,
+              success: parseInt(row[successIndex]) || 0,
+              overdue: parseInt(row[overdueIndex]) || 0,
+              cancelled: parseInt(row[cancelledIndex]) || 0,
+              daysSinceLastPlan: parseInt(row[daysSinceLastPlanIndex]) || 0,
               monthlyData: monthData
             });
             
@@ -116,6 +124,15 @@ function CsmDashboardPage() {
         }
         
         setClinicsData(clinics);
+        
+        // Set default clinic to "Dixie Veterinary Hospital"
+        const defaultClinic = clinics.find(clinic => 
+          clinic.name === 'Dixie Veterinary Hospital'
+        );
+        if (defaultClinic) {
+          setSelectedClinic(defaultClinic);
+          setSearchTerm('Dixie Veterinary Hospital');
+        }
       } catch (error) {
         console.error('Error fetching clinics data:', error);
       }
@@ -124,18 +141,15 @@ function CsmDashboardPage() {
     fetchClinicsData();
   }, []);
 
-  // Filter clinics based on search term and user's CSM assignment
+  // Filter clinics based on search term (all clinics visible to all users)
   useEffect(() => {
-    if (!user || !clinicsData.length || !searchTerm.trim()) {
+    if (!clinicsData.length || !searchTerm.trim()) {
       setFilteredClinics([]);
       setShowSuggestions(false);
       return;
     }
 
-    const userFullName = `${user.firstName} ${user.lastName}`;
-    const userClinics = clinicsData.filter(clinic => clinic.csm === userFullName);
-    
-    const filtered = userClinics.filter(clinic =>
+    const filtered = clinicsData.filter(clinic =>
       clinic.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
@@ -146,7 +160,7 @@ function CsmDashboardPage() {
                                   searchTerm.trim().length > 0 && 
                                   !selectedClinic;
     setShowSuggestions(shouldShowSuggestions);
-  }, [searchTerm, user, clinicsData, selectedClinic]);
+  }, [searchTerm, clinicsData, selectedClinic]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -185,6 +199,24 @@ function CsmDashboardPage() {
       month,
       value: selectedClinic.monthlyData?.[month] || 0
     }));
+  };
+
+  // Get payment status data for pie chart
+  const getPaymentStatusData = () => {
+    if (!selectedClinic) return [];
+    
+    const success = selectedClinic.success || 0;
+    const overdue = selectedClinic.overdue || 0;
+    const cancelled = selectedClinic.cancelled || 0;
+    const total = success + overdue + cancelled;
+    
+    if (total === 0) return [];
+    
+    return [
+      { label: 'Success', value: success, percentage: Math.round((success / total) * 100), color: '#22c55e' },
+      { label: 'Overdue', value: overdue, percentage: Math.round((overdue / total) * 100), color: '#f59e0b' },
+      { label: 'Cancelled', value: cancelled, percentage: Math.round((cancelled / total) * 100), color: '#ef4444' }
+    ].filter(item => item.value > 0);
   };
 
   // Mock data for demonstration
@@ -283,7 +315,7 @@ function CsmDashboardPage() {
           <div style={{ position: 'relative' }}>
             <input
               type="text"
-              placeholder="Search your assigned clinics..."
+              placeholder="Search all clinics..."
               className="input"
               value={searchTerm}
               onChange={handleSearchChange}
@@ -430,7 +462,7 @@ function CsmDashboardPage() {
                             transition: 'all 0.2s ease'
                           }} />
                           <div style={{ 
-                            fontSize: 10, 
+                            fontSize: 12, 
                             color: '#525252', 
                             textAlign: 'center',
                             fontWeight: isSelected ? 600 : 400
@@ -443,23 +475,200 @@ function CsmDashboardPage() {
                   })()}
                 </div>
               </div>
-              {['Revenue Trend', 'Support Tickets'].map(title => (
-                <div key={title} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
-                  <div style={{ fontSize: 12, color: '#525252', marginBottom: 8 }}>{title}</div>
-                  <div style={{ height: 200, background: '#fafafa', border: '1px dashed #e5e7eb', borderRadius: 6 }} />
+              {/* Revenue Trend */}
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                <div style={{ fontSize: 12, color: '#525252', marginBottom: 8 }}>Revenue Trend</div>
+                <div style={{ height: 220, background: '#fafafa', border: '1px dashed #e5e7eb', borderRadius: 6 }} />
+              </div>
+              
+              {/* Payments Status Split % */}
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                <div style={{ fontSize: 12, color: '#525252', marginBottom: 8 }}>Payments Status Split %</div>
+                <div style={{ height: 220, background: '#fafafa', border: '1px dashed #e5e7eb', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {(() => {
+                    const paymentData = getPaymentStatusData();
+                    if (paymentData.length === 0) {
+                      return (
+                        <div style={{ 
+                          color: '#9ca3af',
+                          fontSize: 14,
+                          textAlign: 'center'
+                        }}>
+                          Select a clinic to view payment status
+                        </div>
+                      );
+                    }
+                    
+                    const radius = 70;
+                    const centerX = 120;
+                    const centerY = 120;
+                    let currentAngle = -90; // Start at top
+                    
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, paddingTop: 15, paddingBottom: 12, height: '100%', justifyContent: 'center' }}>
+                        {/* SVG Pie Chart */}
+                        <svg width="180" height="180" viewBox="0 0 240 240">
+                          {paymentData.map((segment, index) => {
+                            const angle = (segment.value / paymentData.reduce((sum, item) => sum + item.value, 0)) * 360;
+                            const startAngle = currentAngle;
+                            const endAngle = currentAngle + angle;
+                            const midAngle = startAngle + angle / 2;
+                            currentAngle += angle;
+                            
+                            const startAngleRad = (startAngle * Math.PI) / 180;
+                            const endAngleRad = (endAngle * Math.PI) / 180;
+                            const midAngleRad = (midAngle * Math.PI) / 180;
+                            
+                            const x1 = centerX + radius * Math.cos(startAngleRad);
+                            const y1 = centerY + radius * Math.sin(startAngleRad);
+                            const x2 = centerX + radius * Math.cos(endAngleRad);
+                            const y2 = centerY + radius * Math.sin(endAngleRad);
+                            
+                            // Calculate position for percentage label (outside the slice)
+                            const labelRadius = radius + 25;
+                            const labelX = centerX + labelRadius * Math.cos(midAngleRad);
+                            const labelY = centerY + labelRadius * Math.sin(midAngleRad);
+                            
+                            const largeArcFlag = angle > 180 ? 1 : 0;
+                            
+                            const pathData = [
+                              `M ${centerX} ${centerY}`,
+                              `L ${x1} ${y1}`,
+                              `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                              'Z'
+                            ].join(' ');
+                            
+                            return (
+                              <g key={index}>
+                                <path
+                                  d={pathData}
+                                  fill={segment.color}
+                                  stroke="#ffffff"
+                                  strokeWidth="2"
+                                />
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  fontSize="16"
+                                  fontWeight="bold"
+                                  fill="#374151"
+                                >
+                                  {segment.percentage}%
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                        
+                        {/* Legend */}
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+                          {paymentData.map((segment, index) => (
+                            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ 
+                                width: 12, 
+                                height: 12, 
+                                backgroundColor: segment.color,
+                                borderRadius: 2
+                              }} />
+                              <div style={{ fontSize: 12, color: '#374151' }}>
+                                {segment.label}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-              ))}
+              </div>
             </div>
           </section>
           
           <section style={{ marginTop: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
-              {['Onboarding Progress', 'Feature Adoption', 'Renewal Pipeline'].map(title => (
-                <div key={title} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
-                  <div style={{ fontSize: 12, color: '#525252', marginBottom: 8 }}>{title}</div>
-                  <div style={{ height: 200, background: '#fafafa', border: '1px dashed #e5e7eb', borderRadius: 6 }} />
+              {/* Onboarding Progress */}
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                <div style={{ fontSize: 12, color: '#525252', marginBottom: 8 }}>Onboarding Progress</div>
+                <div style={{ height: 220, background: '#fafafa', border: '1px dashed #e5e7eb', borderRadius: 6 }} />
+              </div>
+              
+              {/* Feature Adoption */}
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                <div style={{ fontSize: 12, color: '#525252', marginBottom: 8 }}>Feature Adoption</div>
+                <div style={{ height: 220, background: '#fafafa', border: '1px dashed #e5e7eb', borderRadius: 6 }} />
+              </div>
+              
+              {/* Historical Overview */}
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#ffffff' }}>
+                <div style={{ fontSize: 12, color: '#525252', marginBottom: 8 }}>Historical Overview</div>
+                <div style={{ height: 220, background: '#fafafa', border: '1px dashed #e5e7eb', borderRadius: 6, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 16 }}>
+                  {(() => {
+                    if (!selectedClinic) {
+                      return (
+                        <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center' }}>
+                          Select a clinic to view historical data
+                        </div>
+                      );
+                    }
+                    
+                    const totalPlans = selectedClinic.plansSold || 0;
+                    const firstPlanDate = selectedClinic.firstPlanSoldDate || 'N/A';
+                    const daysSinceLastPlan = selectedClinic.daysSinceLastPlan || 0;
+                    
+                    // Format date to "August 5, 2023" format
+                    const formatDate = (dateStr) => {
+                      if (!dateStr || dateStr === 'N/A') return 'N/A';
+                      try {
+                        const date = new Date(dateStr);
+                        if (isNaN(date.getTime())) return dateStr; // Return original if invalid
+                        return date.toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        });
+                      } catch (e) {
+                        return dateStr; // Return original if parsing fails
+                      }
+                    };
+                    
+                    return (
+                      <div style={{ width: '100%' }}>
+                        {/* Total Plans Sold */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 14, color: '#525252', marginBottom: 4 }}>
+                            Total # of Plans Sold
+                          </div>
+                          <div style={{ fontSize: 18, color: '#000000' }}>
+                            {totalPlans.toLocaleString()}
+                          </div>
+                        </div>
+                        
+                        {/* First Plan Sold Date */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 14, color: '#525252', marginBottom: 4 }}>
+                            First Plan Sold Date
+                          </div>
+                          <div style={{ fontSize: 16, color: '#000000', fontWeight: '500' }}>
+                            {formatDate(firstPlanDate)}
+                          </div>
+                        </div>
+                        
+                        {/* Days Since Last Plan Sold */}
+                        <div>
+                          <div style={{ fontSize: 14, color: '#525252', marginBottom: 4 }}>
+                            Days Since Last Plan Sold
+                          </div>
+                          <div style={{ fontSize: 16, color: '#000000', fontWeight: '500' }}>
+                            {daysSinceLastPlan} days
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-              ))}
+              </div>
             </div>
           </section>
           
