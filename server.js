@@ -258,7 +258,10 @@ app.get('/api/health', async (req, res) => {
 // Pages registry endpoint
 app.get('/api/pages', async (req, res) => {
   try {
-    const pages = await readCollection('pages');
+    const pages = await prisma.page.findMany({
+      select: { slug: true, label: true },
+      orderBy: { slug: 'asc' }
+    });
     res.json(pages);
   } catch (e) {
     console.error('[ERROR] Failed to read pages:', e);
@@ -768,11 +771,12 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     let projectLogo = null;
     if (user.project) {
       try {
-        const projects = await readCollection('projects');
-        const userProject = projects.find(p => p.id === user.project);
+        const userProject = await prisma.project.findUnique({
+          where: { id: user.project }
+        });
         if (userProject) {
-          projectName = userProject.name;
-          projectLogo = userProject.imageDataUrl || null;
+          projectName = userProject.title;
+          projectLogo = null; // TODO: Add logo support to Project model in future step
           console.log(`[DEBUG LOGIN] Found project: ${projectName}, has logo: ${!!projectLogo}`);
         }
       } catch (e) {
@@ -831,11 +835,12 @@ app.get('/api/auth/me', verifyToken, async (req, res) => {
     let projectLogo = null;
     if (currentUser.project) {
       try {
-        const projects = await readCollection('projects');
-        const userProject = projects.find(p => p.id === currentUser.project);
+        const userProject = await prisma.project.findUnique({
+          where: { id: currentUser.project }
+        });
         if (userProject) {
-          projectName = userProject.name;
-          projectLogo = userProject.imageDataUrl || null;
+          projectName = userProject.title;
+          projectLogo = null; // TODO: Add logo support to Project model in future step
           console.log(`[DEBUG ME] Found project: ${projectName}, has logo: ${!!projectLogo}`);
         }
       } catch (e) {
@@ -965,7 +970,7 @@ app.get('/api/users', requireAuth, async (req, res) => {
 
 app.post('/api/users', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
   try {
-    const pages = await readCollection('pages');
+    const pages = await prisma.page.findMany();
     
     // Hash the password before storing (only if not already hashed)
     const saltRounds = 10;
@@ -1011,7 +1016,7 @@ app.post('/api/users', requireAuth, requireSuperadmin, requireAdminWrites, async
 
 app.put('/api/users/:id', requireAuth, requireSuperadmin, requireAdminWrites, async (req, res) => {
   try {
-    const pages = await readCollection('pages');
+    const pages = await prisma.page.findMany();
     
     // Check if user exists
     const existingUser = await prisma.user.findUnique({

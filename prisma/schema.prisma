@@ -67,3 +67,22 @@ model Item {
 
   @@index([collectionId])
 }
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  label     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FileUpload {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String?
+  size         Int?
+  uploadedBy   String?  // user_id
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
