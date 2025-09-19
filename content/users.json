@@ -94,7 +94,7 @@
     "firstName": "Test",
     "lastName": "Tester",
     "email": "tester@gmail.com",
-    "password": "Hello214!",
+    "password": "$2b$10$UB8ZcdYWqt/zwvrq0pP00u5GTY33h/gzEtITQFHV/ORYJktb/GF6q",
     "project": "p_0hevk5lw",
     "projectName": "Pluto Vets",
     "pageAccess": {
@@ -105,6 +105,6 @@
     },
     "isSuperadmin": false,
     "createdAt": "2025-09-18T19:13:27.374Z",
-    "updatedAt": "2025-09-18T19:13:27.374Z"
+    "updatedAt": "2025-09-19T07:27:57.042Z"
   }
 ]

@@ -202,7 +202,7 @@ export default function Home() {
                           textAlign: 'center',
                           transition: 'all 0.2s ease',
                           cursor: 'pointer',
-                          aspectRatio: '1/0.64',
+                          aspectRatio: '1/0.45',
                           display: 'flex',
                           flexDirection: 'column',
                           gap: 12,
